@@ -50,6 +50,20 @@ public class ObxectoCliente {
             scan.close();
             return;
         }
+
+        // Hook para cerrar la conexión si se recibe una señal de terminación
+        InterfaceServidor finalServidor = servidor;
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (finalServidor != null) {
+                try {
+                    InterfaceCliente cliente = new ImplInterfaceCliente();
+                    finalServidor.logOut(cliente);
+                    System.out.println("\nConexión RMI cerrada correctamente.");
+                } catch (RemoteException e) {
+                    System.out.println("Error al cerrar la conexión RMI: " + e.getMessage());
+                }
+            }
+        }));
         
         if(servidor != null){
             try{
@@ -57,6 +71,16 @@ public class ObxectoCliente {
                 InterfacePeer peer = new ImplInterfacePeer();
                 // Registrar el cliente como en línea
                 servidor.logIn(cliente, peer);
+
+                // Bucle de interacción
+                String input = "";
+                while(!input.equals("exit")){
+                    System.out.println("Escribe 'exit' para cerrar el cliente: ");
+                    input = scan.next();
+                }
+
+                // Cerrar la conexión
+                servidor.logOut(cliente);
             }
             catch(RemoteException remoteException){
                 System.out.println("Excepción en la creción de los objetos remotos del cliente: " + remoteException.getMessage());
@@ -64,5 +88,8 @@ public class ObxectoCliente {
         }
 
         scan.close();
+
+        // Finalizar el cliente
+        System.exit(0);
     }
 }

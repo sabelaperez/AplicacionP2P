@@ -2,7 +2,6 @@ package LadoServidor;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,7 +36,7 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
             }
         } 
 
-        // TODO
+        // TODO ( o qué TODO??)
         return true;
     }
     public boolean logOut(InterfaceCliente usuario) throws RemoteException{
@@ -46,6 +45,8 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         if(usuarioPeer == null){
             return false;
         }
+
+        System.out.println("Un usuario se ha desconectado del servidor");
 
         // Notificar al resto de usuario de la baja
         for(InterfaceCliente cliente : clientesEnLinea.keySet()){

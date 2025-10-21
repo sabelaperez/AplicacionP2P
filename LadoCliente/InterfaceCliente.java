@@ -2,7 +2,6 @@ package LadoCliente;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.Collection;
 
 public interface InterfaceCliente extends Remote {
 

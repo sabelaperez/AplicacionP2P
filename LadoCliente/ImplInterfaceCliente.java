@@ -1,12 +1,8 @@
 package LadoCliente;
 
-import java.lang.reflect.Array;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 
 public class ImplInterfaceCliente extends UnicastRemoteObject implements InterfaceCliente {
     private ArrayList<InterfacePeer> peersEnLinea;
@@ -22,6 +18,7 @@ public class ImplInterfaceCliente extends UnicastRemoteObject implements Interfa
     }
 
     public boolean removeUsuarioEnLinea(InterfacePeer usuario) throws RemoteException{
+        System.out.println("Un usuario se ha desconectado");
         return peersEnLinea.remove(usuario);
     }
 }
