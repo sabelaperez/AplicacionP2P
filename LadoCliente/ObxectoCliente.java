@@ -85,6 +85,20 @@ public class ObxectoCliente {
                 String comando = scan.nextLine().trim();
 
                 switch (comando) {
+                    case "users":
+                        // Imprimir lista de peers con los que hablar
+                        System.out.println("Los usuarios disponibles son: ");
+                        try {
+                            for (String usuario : cliente.getPeerNames()) {
+                                System.out.println(usuario);
+                            }
+                        } catch (RemoteException exception) {
+                            System.out.println("Error en la obtención de los peers: " + exception.getMessage());
+                        } catch (NullPointerException npe) {
+                            System.out.println("Error: cliente no inicializado correctamente.");
+                        }
+                        break;
+
                     case "send":
                         System.out.println("Introduce el nombre del destinatario: ");
                         String destinatario = scan.nextLine().trim();
@@ -121,18 +135,11 @@ public class ObxectoCliente {
                         break;
 
                     default:
-                        // Imprimir lista de peers con los que hablar
-                        System.out.println("Los usuarios disponibles son: ");
-                        try {
-                            for (String usuario : cliente.getPeerNames()) {
-                                System.out.println(usuario);
-                            }
-                        } catch (RemoteException exception) {
-                            System.out.println("Error en la obtención de los peers: " + exception.getMessage());
-                        } catch (NullPointerException npe) {
-                            System.out.println("Error: cliente no inicializado correctamente.");
-                        }
-                        break;
+                        System.out.println("Comando no reconocido");
+                        System.out.println("Comandos disponibles: ");
+                        System.out.println("users - Muestra la lista de usuarios en línea");
+                        System.out.println("send - Enviar un mensaje a un usuario");
+                        System.out.println("exit - Desconectar y salir del programa");
                 }
             }
 
