@@ -26,7 +26,7 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         // Notificar a todos los usuario del nuevo registro
         for(Map.Entry<InterfaceCliente, InterfacePeer> cliente : clientesEnLinea.entrySet()){
             if(cliente.getKey() != usuario){
-                cliente.getKey().addUsuarioEnLinea(cliente.getValue());
+                cliente.getKey().addUsuarioEnLinea(peer);
             }
         }
 
@@ -49,7 +49,7 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
 
         // Notificar al resto de usuario de la baja
         for(InterfaceCliente cliente : clientesEnLinea.keySet()){
-            cliente.removeUsuarioEnLinea(usuarioPeer);
+            cliente.removeUsuarioEnLinea(usuarioPeer.getName());
         }
         return true;
     }

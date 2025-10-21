@@ -1,2 +1,2 @@
-./LadoServidor/*.class
-./LadoCliente/*.class
+LadoServidor/*.class
+LadoCliente/*.class

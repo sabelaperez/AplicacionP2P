@@ -28,6 +28,7 @@ public class ObxectoCliente {
         
         System.out.println("Introduce el puerto del registro RMI para Servidor: ");
         Integer puerto = scan.nextInt();
+        scan.nextLine();
 
         // Obtener el objeto remoto
         InterfaceServidor servidor = null;
@@ -51,15 +52,67 @@ public class ObxectoCliente {
             return;
         }
         
+        // Creaación de las interfaces y login
+        ImplInterfaceCliente cliente = null;
+        ImplInterfacePeer peer = null;
+
+        System.out.println("Introduce tu nombre");
+        String nombre = scan.nextLine().trim();
+
         if(servidor != null){
             try{
-                InterfaceCliente cliente = new ImplInterfaceCliente();
-                InterfacePeer peer = new ImplInterfacePeer();
+                cliente = new ImplInterfaceCliente();
+                peer = new ImplInterfacePeer(nombre);
                 // Registrar el cliente como en línea
                 servidor.logIn(cliente, peer);
             }
             catch(RemoteException remoteException){
                 System.out.println("Excepción en la creción de los objetos remotos del cliente: " + remoteException.getMessage());
+            }
+        }
+        else{
+            System.out.println("Error en la conexión con el servidor");
+            scan.close();
+            return;
+        }
+
+        boolean exit = false;
+        while(!exit){
+            String comando = scan.nextLine().trim();
+
+            switch (comando) {
+                case "send":
+                    System.out.println("Introduce el nombre del destinatario: ");
+                    String destinatario = scan.nextLine().trim();
+
+                    System.out.println("Introduce el mensaje: ");
+                    String mensaje = scan.nextLine();
+
+                    InterfacePeer peerDestino = cliente.find(destinatario);
+                    try{
+                        peerDestino.receiveMessage(mensaje);
+                    }
+                    catch(RemoteException exception){
+                        System.out.println("Error al enviar un mensaje: " + exception.getMessage());
+                    }
+
+                    System.out.println("Se ha enviado el mensaje \"" + mensaje + "\" a " + destinatario);
+
+                    break;
+            
+                default:
+                    // Imprimir lista de peers con los que hablar
+                    System.out.println("Los usuarios disponibles son: ");
+                    try{
+                        for(String usuario : cliente.getPeerNames()){
+                            System.out.println(usuario);
+                        }
+                    }
+                    catch(RemoteException exception){
+                        System.out.println("Error en la obtención de los peers: " + exception.getMessage());
+                    }
+                    
+                    break;
             }
         }
 
