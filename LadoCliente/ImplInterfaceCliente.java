@@ -14,7 +14,7 @@ public class ImplInterfaceCliente extends UnicastRemoteObject implements Interfa
     }
 
     public boolean addUsuarioEnLinea(InterfacePeer usuario) throws RemoteException{
-        System.out.println("El usuario " + usuario.getName() + " se ha conectado");
+        System.out.println(usuario.getName() + " está en linea");
         peersEnLinea.put(usuario.getName(), usuario);
 
         // TODO
@@ -22,7 +22,7 @@ public class ImplInterfaceCliente extends UnicastRemoteObject implements Interfa
     }
 
     public boolean removeUsuarioEnLinea(String nombre) throws RemoteException{
-        System.out.println("El usuario " + nombre + " se ha desconectado");
+        System.out.println(nombre + " se ha desconectado");
         peersEnLinea.remove(nombre);
 
         // TODO

@@ -60,7 +60,6 @@ public class ObxectoCliente {
                 cliente = new ImplInterfaceCliente();
                 peer = new ImplInterfacePeer(nombre);
                 servidor.logIn(cliente, peer); // método remoto del servidor
-                System.out.println("Registrado en el servidor como: " + nombre);
             } catch (RemoteException remoteException) {
                 System.out.println("Excepción en la creación/registro de los objetos remotos del cliente: " + remoteException.getMessage());
                 remoteException.printStackTrace();
