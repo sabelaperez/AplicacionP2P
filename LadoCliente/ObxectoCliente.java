@@ -109,7 +109,7 @@ public class ObxectoCliente {
                         try {
                             InterfacePeer peerDestino = cliente.find(destinatario);
                             if (peerDestino != null) {
-                                peerDestino.receiveMessage(mensaje);
+                                peerDestino.receiveMessage(mensaje, nombre);
                                 System.out.println("Se ha enviado el mensaje \"" + mensaje + "\" a " + destinatario);
                             } else {
                                 System.out.println("No se encontró al usuario " + destinatario);

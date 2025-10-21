@@ -11,8 +11,8 @@ public class ImplInterfacePeer extends UnicastRemoteObject implements InterfaceP
         this.nombre = nombre;
     }
 
-    public void receiveMessage(String message) throws RemoteException{
-        System.out.println("El mensaje recibido es: " + message);
+    public void receiveMessage(String message, String nome) throws RemoteException{
+        System.out.println("[" + nome + "]: " + message);
     }
 
     public String getName() throws RemoteException{
