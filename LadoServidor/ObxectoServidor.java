@@ -26,7 +26,7 @@ public class ObxectoServidor {
 
             // Rexistrar o obxecto no rexistro RMI
             rexistrarObxecto(porto);
-            String URLRexistro = "rmi://localhost:" + porto + "/ObxectoRemoto";
+            String URLRexistro = "rmi://localhost:" + porto + "/servidorRemoto";
             Naming.rebind(URLRexistro, obxectoExportado);
             System.out.println("Obxecto rexistrado en " + URLRexistro);
 
