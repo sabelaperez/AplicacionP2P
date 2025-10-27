@@ -54,12 +54,18 @@ public class ObxectoCliente {
             // Pedir nombre de usuario
             System.out.println("Introduce tu nombre");
             String nombre = scan.nextLine().trim();
+            System.out.println("Introduce tu contraseña");
+            String contrasinal = scan.nextLine().trim();
 
             // Crear las implementaciones del cliente y registrarse en el servidor
             try {
                 cliente = new ImplInterfaceCliente();
                 peer = new ImplInterfacePeer(nombre);
-                servidor.logIn(cliente, peer); // método remoto del servidor
+                boolean logged = servidor.logIn(cliente, peer, contrasinal); // método remoto del servidor
+                if(!logged){
+                    System.out.println("No se ha podido iniciar sesión. Nombre de usuario o contraseña incorrectos.");
+                    return;
+                }
             } catch (RemoteException remoteException) {
                 System.out.println("Excepción en la creación/registro de los objetos remotos del cliente: " + remoteException.getMessage());
                 remoteException.printStackTrace();

@@ -19,7 +19,7 @@ public interface InterfaceServidor extends Remote {
      */
 
     // Conectar un nuevo usuario en línea
-    public boolean logIn(InterfaceCliente usuario, InterfacePeer peer) throws RemoteException;
+    public boolean logIn(InterfaceCliente usuario, InterfacePeer peer, String contrasinal) throws RemoteException;
     public boolean logOut(InterfaceCliente usuario) throws RemoteException;
 
 }
