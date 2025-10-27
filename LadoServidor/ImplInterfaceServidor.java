@@ -1,8 +1,10 @@
 package LadoServidor;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -60,15 +62,56 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
             e.printStackTrace();
         }
 
-        System.out.println("Usuarios cargados: " + usuarios.keySet());
         return usuarios;
     }
 
+    protected boolean gardarUsuarios() {
+        // Gardar os usuarios no arquivo
+        File bd = new File("LadoServidor/bd.txt");
+        if(!bd.exists()) {
+            bd = new File("bd.txt");
+        }
 
-    public boolean authenticate(String username, String passwordHash) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(bd))) {
+            bw.write("USER PASSWD");
+            bw.newLine();
+            for (Map.Entry<String, String> entry : usuariosRegistrados.entrySet()) {
+                bw.write(entry.getKey() + " " + entry.getValue());
+                bw.newLine();
+            }
+            return true;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean registerUser(String usuario, String contrasinal) {
+        // Comprobar se o usuario xa existe
+        if(usuariosRegistrados.containsKey(usuario)){
+            return false; 
+        }
+
+        // Rexistrar un novo usuario
+        usuariosRegistrados.put(usuario, contrasinal);
+        return true;
+    }
+
+    public boolean deleteUser(String usuario, String contrasinal) {
+        // Eliminar un usuario rexistrado
+        if(!authenticate(usuario, contrasinal)){
+            return false; // O usuario non está rexistrado ou o contrasinal é incorrecto
+        }
+
+        usuariosRegistrados.remove(usuario);
+        return true;
+    }
+
+    public boolean authenticate(String usuario, String contrasinal) {
         // Comprobar que o usuario está rexistrado
-        String user = usuariosRegistrados.get(username);
-        return user != null && user.equals(passwordHash);
+        String user = usuariosRegistrados.get(usuario);
+        return user != null && user.equals(contrasinal);
     }
 
     public boolean logIn(InterfaceCliente usuario, InterfacePeer peer, String contrasinal) throws RemoteException{

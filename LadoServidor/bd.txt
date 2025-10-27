@@ -1,2 +1,2 @@
-USER    PASSWD
-Juan    1234
+USER PASSWD
+Marta martita

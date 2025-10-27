@@ -30,6 +30,16 @@ public class ObxectoServidor {
             Naming.rebind(URLRexistro, obxectoExportado);
             System.out.println("Obxecto rexistrado en " + URLRexistro);
 
+            // Hook para actualizar a base de datos ao pechar o servidor
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                boolean actualizado = obxectoExportado.gardarUsuarios();
+                if (actualizado) {
+                    System.out.println("Base de datos actualizada correctamente.");
+                } else {
+                    System.out.println("Erro ao actualizar a base de datos.");
+                }
+            }));
+
         } catch (Exception e) {
             System.out.println("Ocorreu un erro: " + e);
         }

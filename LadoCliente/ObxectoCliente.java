@@ -51,26 +51,53 @@ public class ObxectoCliente {
                 return;
             }
 
-            // Pedir nombre de usuario
-            System.out.println("Introduce tu nombre");
-            String nombre = scan.nextLine().trim();
-            System.out.println("Introduce tu contraseña");
-            String contrasinal = scan.nextLine().trim();
+            // Entrar no sistema
+            boolean logged = false;
+            boolean registered = false;
 
-            // Crear las implementaciones del cliente y registrarse en el servidor
-            try {
-                cliente = new ImplInterfaceCliente();
-                peer = new ImplInterfacePeer(nombre);
-                boolean logged = servidor.logIn(cliente, peer, contrasinal); // método remoto del servidor
-                if(!logged){
-                    System.out.println("No se ha podido iniciar sesión. Nombre de usuario o contraseña incorrectos.");
+            String nombre = "";
+            String contrasinal = "";
+
+            do {
+                System.out.println("\nDesea registrarse como nuevo usuario o iniciar sesión? (r/i)");
+                String respuesta = scan.nextLine().trim().toLowerCase();
+
+                // Pedir datos de usuario
+                System.out.println("Introduce tu nombre");
+                nombre = scan.nextLine().trim();
+                System.out.println("Introduce tu contraseña");
+                contrasinal = scan.nextLine().trim();
+
+                try {
+                    // Crear las implementaciones del cliente y registrarse en el servidor
+                    cliente = new ImplInterfaceCliente();
+                    peer = new ImplInterfacePeer(nombre);
+
+                    // Realizar a acción correspondente
+                    if(respuesta.equals("r")) {
+                        // Rexistrarse como novo usuario
+                        registered = servidor.registerUser(nombre, contrasinal);
+                            if(registered){
+                                System.out.println("Usuario registrado correctamente.");
+                                servidor.logIn(cliente, peer, contrasinal);
+                            } else {
+                                System.out.println("No se ha podido registrar el usuario. El nombre de usuario ya existe.");
+                            }
+                    } else if(respuesta.equals("i")){
+                        // Iniciar sesión
+                        logged = servidor.logIn(cliente, peer, contrasinal); 
+                        if(!logged){
+                            System.out.println("No se ha podido iniciar sesión. Nombre de usuario o contraseña incorrectos.");
+                        }
+                    } else {
+                        System.out.println("Respuesta no válida");
+                    }
+                } catch (RemoteException e) {
+                    System.out.println("Excepción en el inicio de sesión: " + e.getMessage());
+                    e.printStackTrace();
                     return;
                 }
-            } catch (RemoteException remoteException) {
-                System.out.println("Excepción en la creación/registro de los objetos remotos del cliente: " + remoteException.getMessage());
-                remoteException.printStackTrace();
-                return;
-            }
+            } while (logged == false && registered == false);
 
             // Hook para cerrar la conexión si se recibe una señal de terminación
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -127,6 +154,23 @@ public class ObxectoCliente {
 
                         break;
 
+                    case "delete":
+                        // Elimina o usuario da base de datos do servidor
+                        try {
+                            boolean deleted = servidor.deleteUser(nombre, contrasinal);
+                            if(deleted) {
+                                System.out.println("Usuario eliminado correctamente.");
+                                // Desconectar do servidor
+                                servidor.logOut(cliente);
+                                exit = true;
+                            } else {
+                                System.out.println("No se ha podido eliminar el usuario. Nombre de usuario o contraseña incorrectos.");
+                            }
+                        } catch (RemoteException exception) {
+                            System.out.println("Error al eliminar el usuario: " + exception.getMessage());
+                        }
+                        break;
+
                     case "exit":
                         // Desconexión del cliente
                         try {
@@ -144,6 +188,7 @@ public class ObxectoCliente {
                         System.out.println("Comandos disponibles: ");
                         System.out.println("users - Muestra la lista de usuarios en línea");
                         System.out.println("send - Enviar un mensaje a un usuario");
+                        System.out.println("delete - Eliminar el usuario registrado");
                         System.out.println("exit - Desconectar y salir del programa");
                 }
             }

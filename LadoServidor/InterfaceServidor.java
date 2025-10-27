@@ -22,4 +22,8 @@ public interface InterfaceServidor extends Remote {
     public boolean logIn(InterfaceCliente usuario, InterfacePeer peer, String contrasinal) throws RemoteException;
     public boolean logOut(InterfaceCliente usuario) throws RemoteException;
 
+    // Xestionar os usuarios rexistrados
+    public boolean registerUser(String usuario, String contrasinal) throws RemoteException;
+    public boolean deleteUser(String usuario, String contrasinal) throws RemoteException;
+
 }
