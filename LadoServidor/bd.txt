@@ -1,2 +1,13 @@
 USER PASSWD
 Marta asd
+Juan 1234
+Carlos bonjour
+
+USER NUMBER
+Marta 1
+Juan
+Juan 2
+Marta
+Carlos
+Carlos 1
+Juan
