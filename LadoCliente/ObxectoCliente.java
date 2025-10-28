@@ -99,6 +99,9 @@ public class ObxectoCliente {
                 }
             } while (logged == false && registered == false);
 
+            System.out.println("\nInicio de sesión correcto. Bienvenido " + nombre + "!");
+            printMenu();
+
             // Hook para cerrar la conexión si se recibe una señal de terminación
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 if (servidor != null && cliente != null) {
@@ -154,6 +157,23 @@ public class ObxectoCliente {
 
                         break;
 
+                    case "passwd":
+                        System.out.println("Introduce la nueva contraseña: ");
+                        String nuevaContrasinal = scan.nextLine().trim();
+
+                        try {
+                            boolean changed = servidor.changePassword(nombre, contrasinal, nuevaContrasinal);
+                            if(changed) {
+                                System.out.println("Contraseña cambiada correctamente.");
+                                contrasinal = nuevaContrasinal; // Actualizar la contraseña localmente
+                            } else {
+                                System.out.println("No se ha podido cambiar la contraseña.");
+                            }
+                        } catch (RemoteException exception) {
+                            System.out.println("Error al cambiar la contraseña: " + exception.getMessage());
+                        }
+                        break;
+
                     case "delete":
                         // Elimina o usuario da base de datos do servidor
                         try {
@@ -184,12 +204,9 @@ public class ObxectoCliente {
                         break;
 
                     default:
-                        System.out.println("Comando no reconocido");
-                        System.out.println("Comandos disponibles: ");
-                        System.out.println("users - Muestra la lista de usuarios en línea");
-                        System.out.println("send - Enviar un mensaje a un usuario");
-                        System.out.println("delete - Eliminar el usuario registrado");
-                        System.out.println("exit - Desconectar y salir del programa");
+                        System.out.println("\nComando no reconocido");
+                        printMenu();
+                        break;
                 }
             }
 
@@ -198,5 +215,14 @@ public class ObxectoCliente {
             scan.close();
             System.exit(0);
         }
+    }
+
+    static private void printMenu() {
+        System.out.println("Comandos disponibles: ");
+        System.out.println("users - Muestra la lista de usuarios en línea");
+        System.out.println("send - Enviar un mensaje a un usuario");
+        System.out.println("passwd - Cambiar la contraseña del usuario");
+        System.out.println("delete - Eliminar el usuario registrado");
+        System.out.println("exit - Desconectar y salir del programa");
     }
 }

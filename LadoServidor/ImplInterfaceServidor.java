@@ -138,8 +138,6 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
                 usuario.addUsuarioEnLinea(clientePeer);
             }
         } 
-
-        // TODO ( o qué TODO??)
         return true;
     }
     public boolean logOut(InterfaceCliente usuario) throws RemoteException{
@@ -155,6 +153,17 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         for(InterfaceCliente cliente : clientesEnLinea.keySet()){
             cliente.removeUsuarioEnLinea(usuarioPeer.getName());
         }
+        return true;
+    }
+
+    public boolean changePassword(String usuario, String contrasinalAntigo, String contrasinalNovo) throws RemoteException {
+        // Comprobar se o usuario está rexistrado e o contrasinal antigo é correcto
+        if(!authenticate(usuario, contrasinalAntigo)){
+            return false; // O usuario non está rexistrado ou o contrasinal antigo é incorrecto
+        }
+
+        // Cambiar o contrasinal
+        usuariosRegistrados.put(usuario, contrasinalNovo);
         return true;
     }
 }
