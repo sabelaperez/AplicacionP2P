@@ -32,105 +32,105 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         amigos = new HashMap<>();
         solicitudesAmistad = new HashMap<>();
         usuariosRegistrados = cargarDatos();
+        solicitudesAmistad = cargarSolicitudes();
     }
 
     private HashMap<String, String> cargarDatos() {
-    HashMap<String, String> usuarios = new HashMap<>();
-    amigos.clear();
+        HashMap<String, String> usuarios = new HashMap<>();
+        amigos.clear();
 
-    File bd = new File("LadoServidor/bd.txt");
-    if (!bd.exists()) {
-        bd = new File("bd.txt");
-    }
-
-    try (BufferedReader br = new BufferedReader(new FileReader(bd))) {
-        String line = br.readLine();
-
-        // Validar cabeceira USER PASSWD
-        if (line == null || !line.trim().replaceAll("\\s+", " ").equals("USER PASSWD")) {
-            throw new IOException("O arquivo de base de datos non ten o formato correcto (falta USER PASSWD).");
+        File bd = new File("LadoServidor/bd.txt");
+        if (!bd.exists()) {
+            bd = new File("bd.txt");
         }
 
-        // Ler usuarios ata atopar a cabeceira USER NUMBER (ou EOF)
-        while ((line = br.readLine()) != null) {
-            line = line.trim();
-            if (line.isEmpty()) continue;
+        try (BufferedReader br = new BufferedReader(new FileReader(bd))) {
+            String line = br.readLine();
 
-            if (line.replaceAll("\\s+", " ").equals("USER NUMBER")) {
-                // Pasamos á sección de amigos
-                break;
+            // Validar cabeceira USER PASSWD
+            if (line == null || !line.trim().replaceAll("\\s+", " ").equals("USER PASSWD")) {
+                throw new IOException("O arquivo de base de datos non ten o formato correcto (falta USER PASSWD).");
             }
 
-            String[] partes = line.split("\\s+");
-            if (partes.length == 2) {
-                String username = partes[0];
-                String passwordHash = partes[1];
-                usuarios.put(username, passwordHash);
-                // Inicializamos a súa lista de amigos
-                amigos.putIfAbsent(username, new ArrayList<>());
-            } else {
-                System.err.println("Línea de usuarios con formato inesperado (se ignora): '" + line + "'");
-            }
-        }
+            // Ler usuarios ata atopar a cabeceira USER NUMBER (ou EOF)
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty()) continue;
 
-        // Se chegamos a EOF e non hai sección de amigos, devolvemos o cargado
-        if (line == null) {
-            return usuarios;
-        }
+                if (line.replaceAll("\\s+", " ").equals("USER NUMBER")) {
+                    // Pasamos á sección de amigos
+                    break;
+                }
 
-        // Ler amigos ata EOF
-        while ((line = br.readLine()) != null) {
-            line = line.trim();
-            if (line.isEmpty()) continue;
-
-            String[] header = line.split("\\s+");
-            if (header.length >= 1) {
-                String username = header[0];
-                // Poderíase comprobar se o usuario existe en 'usuariosRegistrados' 
-                int count = 0;
-                if (header.length >= 2) {
-                    try {
-                        count = Integer.parseInt(header[1]);
-                    } catch (NumberFormatException e) {
-                        System.err.println("Número de amigos no válido para '" + username + "', se asume 0: '" + line + "'");
-                        count = 0;
-                    }
+                String[] partes = line.split("\\s+");
+                if (partes.length == 2) {
+                    String username = partes[0];
+                    String passwordHash = partes[1];
+                    usuarios.put(username, passwordHash);
+                    // Inicializamos a súa lista de amigos
+                    amigos.putIfAbsent(username, new ArrayList<>());
                 } else {
-                    System.err.println("Falta o número de amigos para '" + username + "', se asume 0: '" + line + "'");
+                    System.err.println("Línea de usuarios con formato inesperado (se ignora): '" + line + "'");
                 }
-
-                ArrayList<String> lista = new ArrayList<>();
-                for (int i = 0; i < count; i++) {
-                    String friendLine = br.readLine();
-                    if (friendLine == null) {
-                        System.err.println("Faltan líneas de amigos para '" + username + "' (esperados " + count + ").");
-                        break;
-                    }
-                    friendLine = friendLine.trim();
-                    if (friendLine.isEmpty()) {
-                        i--; // Non contar liñas baleiras (non debería ocorrer)
-                        continue;
-                    }
-                    lista.add(friendLine);
-                }
-
-                // Gardamos a lista de amigos
-                amigos.put(username, lista);
-            } else {
-                System.err.println("Línea de USER NUMBER malformada: '" + line + "'");
             }
+
+            // Se chegamos a EOF e non hai sección de amigos, devolvemos o cargado
+            if (line == null) {
+                return usuarios;
+            }
+
+            // Ler amigos ata EOF
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty()) continue;
+
+                String[] header = line.split("\\s+");
+                if (header.length >= 1) {
+                    String username = header[0];
+                    // Poderíase comprobar se o usuario existe en 'usuariosRegistrados' 
+                    int count = 0;
+                    if (header.length >= 2) {
+                        try {
+                            count = Integer.parseInt(header[1]);
+                        } catch (NumberFormatException e) {
+                            System.err.println("Número de amigos no válido para '" + username + "', se asume 0: '" + line + "'");
+                            count = 0;
+                        }
+                    } else {
+                        System.err.println("Falta o número de amigos para '" + username + "', se asume 0: '" + line + "'");
+                    }
+
+                    ArrayList<String> lista = new ArrayList<>();
+                    for (int i = 0; i < count; i++) {
+                        String friendLine = br.readLine();
+                        if (friendLine == null) {
+                            System.err.println("Faltan líneas de amigos para '" + username + "' (esperados " + count + ").");
+                            break;
+                        }
+                        friendLine = friendLine.trim();
+                        if (friendLine.isEmpty()) {
+                            i--; // Non contar liñas baleiras (non debería ocorrer)
+                            continue;
+                        }
+                        lista.add(friendLine);
+                    }
+
+                    // Gardamos a lista de amigos
+                    amigos.put(username, lista);
+                } else {
+                    System.err.println("Línea de USER NUMBER malformada: '" + line + "'");
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-    } catch (IOException e) {
-        e.printStackTrace();
+        System.out.println("Usuarios cargados: " + usuarios.keySet());
+        System.out.println("Amizades cargadas: " + amigos);
+
+        return usuarios;
     }
-
-    System.out.println("Usuarios cargados: " + usuarios.keySet());
-    System.out.println("Amizades cargadas: " + amigos);
-
-    return usuarios;
-}
-
 
     protected boolean gardarUsuarios() {
         File bd = new File("LadoServidor/bd.txt");
@@ -163,6 +163,73 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
                 bw.newLine();
                 for (String f : lista) {
                     bw.write(f);
+                    bw.newLine();
+                }
+            }
+            return true;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private HashMap<String, ArrayList<String>> cargarSolicitudes() {
+        HashMap<String, ArrayList<String>> solicitudes = new HashMap<>();
+
+        File solis = new File("LadoServidor/solis.txt");
+        if (!solis.exists()) {
+            solis = new File("solis.txt");
+        }
+
+        try (BufferedReader br = new BufferedReader(new FileReader(solis))) {
+            String line = br.readLine();
+
+            // Validar cabeceira SOLICITUDES
+            if (line == null || !line.trim().replaceAll("\\s+", " ").equals("SOLICITUDES")) {
+                throw new IOException("O arquivo de solicitudes non ten o formato correcto (falta SOLICITUDES).");
+            }
+
+            // Ler solicitudes ata EOF
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty()) continue;
+
+                String[] partes = line.split("\\s+");
+                if (partes.length == 2) {
+                    String nombreSolicitante = partes[0];
+                    String nombreSolicitado = partes[1];
+
+                    ArrayList<String> lista = solicitudes.getOrDefault(nombreSolicitado, new ArrayList<>());
+                    lista.add(nombreSolicitante);
+                    solicitudes.put(nombreSolicitado, lista);
+                } else {
+                    System.err.println("Línea de solicitudes con formato inesperado (se ignora): '" + line + "'");
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return solicitudes;
+    }
+
+    protected boolean gardarSolicitudes() {
+        File solis = new File("LadoServidor/solis.txt");
+        if (!solis.exists()) {
+            solis = new File("solis.txt");
+        }
+
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(solis))) {
+            // Sección solicitudes
+            bw.write("SOLICITUDES");
+            bw.newLine();
+            for (Map.Entry<String, ArrayList<String>> entry : solicitudesAmistad.entrySet()) {
+                String nombreSolicitado = entry.getKey();
+                ArrayList<String> listaSolicitantes = entry.getValue();
+                for (String nombreSolicitante : listaSolicitantes) {
+                    bw.write(nombreSolicitante + " " + nombreSolicitado);
                     bw.newLine();
                 }
             }
