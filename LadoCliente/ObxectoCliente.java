@@ -16,6 +16,9 @@ public class ObxectoCliente {
     private static InterfaceServidor servidor = null;
     private static ImplInterfaceCliente cliente = null;
     private static ImplInterfacePeer peer = null;
+    
+    private static String nombre = "";
+    private static String contrasinal = "";
 
     public static void main(String[] args) {
         Scanner scan = new Scanner(System.in);
@@ -54,9 +57,6 @@ public class ObxectoCliente {
             // Entrar no sistema
             boolean logged = false;
             boolean registered = false;
-
-            String nombre = "";
-            String contrasinal = "";
 
             do {
                 System.out.println("\nDesea registrarse como nuevo usuario o iniciar sesión? (r/i)");
@@ -103,7 +103,7 @@ public class ObxectoCliente {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 if (servidor != null && cliente != null) {
                     try {
-                        servidor.logOut(cliente);
+                        servidor.logOut(nombre, contrasinal);
                         System.out.println("\nConexión RMI cerrada correctamente.");
                     } catch (RemoteException e) {
                         System.out.println("Error al cerrar la conexión RMI: " + e.getMessage());
@@ -161,7 +161,7 @@ public class ObxectoCliente {
                             if(deleted) {
                                 System.out.println("Usuario eliminado correctamente.");
                                 // Desconectar do servidor
-                                servidor.logOut(cliente);
+                                servidor.logOut(nombre, contrasinal);
                                 exit = true;
                             } else {
                                 System.out.println("No se ha podido eliminar el usuario. Nombre de usuario o contraseña incorrectos.");
@@ -175,7 +175,7 @@ public class ObxectoCliente {
                         // Desconexión del cliente
                         try {
                             if (servidor != null && cliente != null) {
-                                servidor.logOut(cliente);
+                                servidor.logOut(nombre, contrasinal);
                             }
                         } catch (RemoteException exception) {
                             System.out.println("Error al desconectar el cliente: " + exception.getMessage());
