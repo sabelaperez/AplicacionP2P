@@ -10,7 +10,9 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import LadoCliente.InterfaceCliente;
 import LadoCliente.InterfacePeer;
@@ -27,62 +29,142 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         super();
         clientesEnLinea = new HashMap<>();
         usuariosRegistrados = new HashMap<>();
-        usuariosRegistrados = cargarUsuarios();
+        amigos = new HashMap<>();
+        solicitudesAmistad = new HashMap<>();
+        usuariosRegistrados = cargarDatos();
     }
 
-    private HashMap<String, String> cargarUsuarios() {
-        // Cargar usuarios dende o arquivo
-        HashMap<String, String> usuarios = new HashMap<>();
+    private HashMap<String, String> cargarDatos() {
+    HashMap<String, String> usuarios = new HashMap<>();
+    amigos.clear();
 
-        // Localizar o arquivo de base de datos
-        File bd = new File("LadoServidor/bd.txt");
-        if(!bd.exists()) {
-            bd = new File("bd.txt");
+    File bd = new File("LadoServidor/bd.txt");
+    if (!bd.exists()) {
+        bd = new File("bd.txt");
+    }
+
+    try (BufferedReader br = new BufferedReader(new FileReader(bd))) {
+        String line = br.readLine();
+
+        // Validar cabeceira USER PASSWD
+        if (line == null || !line.trim().replaceAll("\\s+", " ").equals("USER PASSWD")) {
+            throw new IOException("O arquivo de base de datos non ten o formato correcto (falta USER PASSWD).");
         }
 
-        // Ler o arquivo
-        try (BufferedReader br = new BufferedReader(new FileReader(bd))) {
-            String line = br.readLine();
+        // Ler usuarios ata atopar a cabeceira USER NUMBER (ou EOF)
+        while ((line = br.readLine()) != null) {
+            line = line.trim();
+            if (line.isEmpty()) continue;
 
-            // Procesar a cabeceira
-            if(!line.trim().replaceAll("\\s+", " ").equals("USER PASSWD")) {
-                throw new IOException("O arquivo de base de datos non ten o formato correcto.");
-            } else {
-                // Ler os usuarios
-                while ((line = br.readLine()) != null) {
-                    line = line.trim();
-                    if (line.isEmpty()) continue; // saltar líneas vacías
-
-                    String[] partes = line.split("\\s+");
-                    if (partes.length == 2) {
-                        String username = partes[0];
-                        String passwordHash = partes[1];
-                        usuarios.put(username, passwordHash);
-                    } else {
-                        System.err.println("Línea con formato inesperado (se ignora): '" + line + "'");
-                    }
-                }
+            if (line.replaceAll("\\s+", " ").equals("USER NUMBER")) {
+                // Pasamos á sección de amigos
+                break;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+
+            String[] partes = line.split("\\s+");
+            if (partes.length == 2) {
+                String username = partes[0];
+                String passwordHash = partes[1];
+                usuarios.put(username, passwordHash);
+                // Inicializamos a súa lista de amigos
+                amigos.putIfAbsent(username, new ArrayList<>());
+            } else {
+                System.err.println("Línea de usuarios con formato inesperado (se ignora): '" + line + "'");
+            }
         }
 
-        return usuarios;
+        // Se chegamos a EOF e non hai sección de amigos, devolvemos o cargado
+        if (line == null) {
+            return usuarios;
+        }
+
+        // Ler amigos ata EOF
+        while ((line = br.readLine()) != null) {
+            line = line.trim();
+            if (line.isEmpty()) continue;
+
+            String[] header = line.split("\\s+");
+            if (header.length >= 1) {
+                String username = header[0];
+                // Poderíase comprobar se o usuario existe en 'usuariosRegistrados' 
+                int count = 0;
+                if (header.length >= 2) {
+                    try {
+                        count = Integer.parseInt(header[1]);
+                    } catch (NumberFormatException e) {
+                        System.err.println("Número de amigos no válido para '" + username + "', se asume 0: '" + line + "'");
+                        count = 0;
+                    }
+                } else {
+                    System.err.println("Falta o número de amigos para '" + username + "', se asume 0: '" + line + "'");
+                }
+
+                ArrayList<String> lista = new ArrayList<>();
+                for (int i = 0; i < count; i++) {
+                    String friendLine = br.readLine();
+                    if (friendLine == null) {
+                        System.err.println("Faltan líneas de amigos para '" + username + "' (esperados " + count + ").");
+                        break;
+                    }
+                    friendLine = friendLine.trim();
+                    if (friendLine.isEmpty()) {
+                        i--; // Non contar liñas baleiras (non debería ocorrer)
+                        continue;
+                    }
+                    lista.add(friendLine);
+                }
+
+                // Gardamos a lista de amigos
+                amigos.put(username, lista);
+            } else {
+                System.err.println("Línea de USER NUMBER malformada: '" + line + "'");
+            }
+        }
+
+    } catch (IOException e) {
+        e.printStackTrace();
     }
+
+    System.out.println("Usuarios cargados: " + usuarios.keySet());
+    System.out.println("Amizades cargadas: " + amigos);
+
+    return usuarios;
+}
+
 
     protected boolean gardarUsuarios() {
-        // Gardar os usuarios no arquivo
         File bd = new File("LadoServidor/bd.txt");
-        if(!bd.exists()) {
+        if (!bd.exists()) {
             bd = new File("bd.txt");
         }
 
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(bd))) {
+            // Sección usuarios
             bw.write("USER PASSWD");
             bw.newLine();
             for (Map.Entry<String, String> entry : usuariosRegistrados.entrySet()) {
                 bw.write(entry.getKey() + " " + entry.getValue());
                 bw.newLine();
+            }
+
+            bw.newLine();
+
+            // Sección amigos
+            bw.write("USER NUMBER");
+            bw.newLine();
+            // Iteramos sobre os usuarios rexistrados
+            Set<String> allUsers = new LinkedHashSet<>();
+            allUsers.addAll(usuariosRegistrados.keySet());
+
+            for (String user : allUsers) {
+                ArrayList<String> lista = amigos.get(user);
+                if (lista == null) lista = new ArrayList<>();
+                bw.write(user + " " + lista.size());
+                bw.newLine();
+                for (String f : lista) {
+                    bw.write(f);
+                    bw.newLine();
+                }
             }
             return true;
 
@@ -100,16 +182,28 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
 
         // Rexistrar un novo usuario
         usuariosRegistrados.put(usuario, contrasinal);
+        amigos.put(usuario, new ArrayList<>());
         return true;
     }
 
-    public boolean deleteUser(String usuario, String contrasinal) {
+    public boolean deleteUser(String usuario, String contrasinal) throws RemoteException {
         // Eliminar un usuario rexistrado
         if(!authenticate(usuario, contrasinal)){
             return false; // O usuario non está rexistrado ou o contrasinal é incorrecto
         }
 
         usuariosRegistrados.remove(usuario);
+        clientesEnLinea.remove(usuario);
+        amigos.remove(usuario);
+
+        // Notificar al resto de amigos de la baja
+        for(String amigo : this.amigos.get(usuario)){
+            Interfaces interfacesAmigo = clientesEnLinea.get(amigo);
+            interfacesAmigo.cliente().removeUsuarioEnLinea(usuario);
+        }
+
+        // Considerar eliminar as solicitudes de amizade relacionadas
+
         return true;
     }
 
@@ -132,6 +226,7 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
 
         System.out.println("Se ha registrado un nuevo usuario en el servidor");
         
+        // ERRO AQUÍ
         for(String amigo : this.amigos.get(nombreUsuario)){
             Interfaces interfacesAmigo = clientesEnLinea.get(amigo);
             if(interfacesAmigo.cliente() != usuario){
@@ -142,6 +237,8 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
                 usuario.addUsuarioEnLinea(interfacesAmigo.peer());
             }
         } 
+
+        System.out.println("Usuarios en línea: " + clientesEnLinea.keySet());
         return true;
     }
 

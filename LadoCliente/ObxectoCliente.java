@@ -12,7 +12,7 @@ import LadoServidor.InterfaceServidor;
 
 public class ObxectoCliente {
 
-    // Variables compartidas (campos estáticos) para poder usarlas en el shutdown hook
+    // Variables compartidas (campos estáticos) 
     private static InterfaceServidor servidor = null;
     private static ImplInterfaceCliente cliente = null;
     private static ImplInterfacePeer peer = null;
@@ -62,6 +62,11 @@ public class ObxectoCliente {
                 System.out.println("\nDesea registrarse como nuevo usuario o iniciar sesión? (r/i)");
                 String respuesta = scan.nextLine().trim().toLowerCase();
 
+                if(!respuesta.equals("r") && !respuesta.equals("i")) {
+                    System.out.println("Respuesta no válida");
+                    continue;
+                }
+
                 // Pedir datos de usuario
                 System.out.println("Introduce tu nombre");
                 nombre = scan.nextLine().trim();
@@ -99,7 +104,7 @@ public class ObxectoCliente {
                 }
             } while (logged == false && registered == false);
 
-            System.out.println("\nInicio de sesión correcto. Bienvenido " + nombre + "!");
+            System.out.println("\nInicio de sesión correcto. Bienvenid@ " + nombre + "!");
             printMenu();
 
             // Hook para cerrar la conexión si se recibe una señal de terminación
@@ -122,10 +127,14 @@ public class ObxectoCliente {
                 switch (comando) {
                     case "users":
                         // Imprimir lista de peers con los que hablar
-                        System.out.println("Los usuarios disponibles son: ");
                         try {
-                            for (String usuario : cliente.getPeerNames()) {
-                                System.out.println(usuario);
+                            if(!cliente.getPeerNames().isEmpty()) {
+                                System.out.println("Los usuarios disponibles son: ");
+                                for (String usuario : cliente.getPeerNames()) {
+                                    System.out.println(usuario);
+                                }
+                            } else {
+                                System.out.println("No hay otros usuarios en línea.");
                             }
                         } catch (RemoteException exception) {
                             System.out.println("Error en la obtención de los peers: " + exception.getMessage());
@@ -180,8 +189,6 @@ public class ObxectoCliente {
                             boolean deleted = servidor.deleteUser(nombre, contrasinal);
                             if(deleted) {
                                 System.out.println("Usuario eliminado correctamente.");
-                                // Desconectar do servidor
-                                servidor.logOut(nombre, contrasinal);
                                 exit = true;
                             } else {
                                 System.out.println("No se ha podido eliminar el usuario. Nombre de usuario o contraseña incorrectos.");
