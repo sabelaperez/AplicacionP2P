@@ -25,6 +25,7 @@ public interface InterfaceServidor extends Remote {
 
     // Xestionar os usuarios rexistrados
     public boolean registerUser(String usuario, String contrasinal) throws RemoteException;
+    public boolean changePassword(String usuario, String contrasinalAntigo, String contrasinalNovo) throws RemoteException;
     public boolean deleteUser(String usuario, String contrasinal) throws RemoteException;
 
     // Xestionar amizades

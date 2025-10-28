@@ -141,7 +141,7 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
                 // Notificar al nuevo usuario de todos los usuarios actualmente en línea
                 usuario.addUsuarioEnLinea(interfacesAmigo.peer());
             }
-        }
+        } 
         return true;
     }
 
@@ -229,6 +229,17 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
             return false;
         }
 
+        return true;
+    }
+
+    public boolean changePassword(String usuario, String contrasinalAntigo, String contrasinalNovo) throws RemoteException {
+        // Comprobar se o usuario está rexistrado e o contrasinal antigo é correcto
+        if(!authenticate(usuario, contrasinalAntigo)){
+            return false; // O usuario non está rexistrado ou o contrasinal antigo é incorrecto
+        }
+
+        // Cambiar o contrasinal
+        usuariosRegistrados.put(usuario, contrasinalNovo);
         return true;
     }
 }
