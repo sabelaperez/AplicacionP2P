@@ -17,8 +17,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import LadoServidor.InterfaceServidor;
 
@@ -32,10 +34,12 @@ public class ClienteUI extends Application {
     
     private Stage primaryStage;
     private ListView<HBox> userListView;
+    private ListView<HBox> pendingRequestsListView;
     private VBox chatArea;
     private TextField messageField;
     private Button sendBtn;
     private Label currentChatLabel;
+    private Label pendingCountLabel;
     private String currentChatUser = null;
     
     // Store chat history for each user
@@ -46,6 +50,9 @@ public class ClienteUI extends Application {
     
     // Store HBox containers for each user in the list
     private Map<String, HBox> userListItems = new HashMap<>();
+    
+    // Store pending friend requests
+    private Map<String, HBox> pendingRequestItems = new HashMap<>();
 
     @Override
     public void start(Stage primaryStage) {
@@ -117,6 +124,16 @@ public class ClienteUI extends Application {
 
     private void handleLogin(String ip, String port, String username, 
                             String password, boolean isRegister, Label statusLabel) {
+        // Validate inputs
+        if (username == null || username.trim().isEmpty()) {
+            statusLabel.setText("Username cannot be empty!");
+            return;
+        }
+        if (password == null || password.trim().isEmpty()) {
+            statusLabel.setText("Password cannot be empty!");
+            return;
+        }
+        
         try {
             // Check if arguments are correct
             InetAddress direccionIP = InetAddress.getByName(ip);
@@ -132,6 +149,22 @@ public class ClienteUI extends Application {
             // Create client and peer implementations
             cliente = new ImplInterfaceCliente();
             peer = new ImplInterfacePeer(nombre);
+
+            // ADD HANDLERS
+            // Set message handler to automatically update the chat
+            peer.setMessageHandler((message, senderName) -> {
+                handleIncomingMessage(message, senderName);
+            });
+            
+            // Set handler to automatically add newly connected friends
+            cliente.setUserAdditionHandler((amigo, interfazAmigo) -> {
+                addUserToList(amigo, true);
+            });
+
+            // Set handler to automatically remove disconnected friends
+            cliente.setUserRemovalHandler((amigo) -> {
+                removeUserFromList(amigo);
+            });
             
             boolean success;
             if (isRegister) {
@@ -167,32 +200,57 @@ public class ClienteUI extends Application {
         }
     }
 
-    private void showMainUI() {
+    private void showMainUI() {        
         BorderPane mainLayout = new BorderPane();
         mainLayout.setPadding(new Insets(10));
 
-        // Left side - User list
+        // Left side - User list and friend requests
         VBox leftPanel = new VBox(10);
-        leftPanel.setPrefWidth(200);
+        leftPanel.setPrefWidth(250);
         leftPanel.setPadding(new Insets(10));
         leftPanel.setStyle("-fx-background-color: #f0f0f0;");
 
-        Label usersLabel = new Label("Usuarios en Liña");
-        usersLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        // Friends section
+        HBox friendsHeader = new HBox(10);
+        friendsHeader.setAlignment(Pos.CENTER_LEFT);
+        Label friendsLabel = new Label("Amigos");
+        friendsLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        Button addFriendBtn = new Button("+");
+        addFriendBtn.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+        addFriendBtn.setTooltip(new Tooltip("Enviar solicitud de amizade"));
+        addFriendBtn.setOnAction(e -> showAddFriendDialog());
+        friendsHeader.getChildren().addAll(friendsLabel, addFriendBtn);
         
         userListView = new ListView<>();
-        userListView.setPrefHeight(400);
+        userListView.setPrefHeight(300);
         
-        Button refreshBtn = new Button("Refrescar");
-        refreshBtn.setOnAction(e -> refreshUserList());
+        // Pending requests section
+        HBox requestsHeader = new HBox(10);
+        requestsHeader.setAlignment(Pos.CENTER_LEFT);
+        Label requestsLabel = new Label("Solicitudes Pendentes");
+        requestsLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+        pendingCountLabel = new Label("(0)");
+        pendingCountLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #666;");
+
+        // Refresh button
+        Button refreshRequestsBtn = new Button("⟳");
+        refreshRequestsBtn.setStyle("-fx-font-size: 12px;");
+        refreshRequestsBtn.setTooltip(new Tooltip("Refrescar solicitudes"));
+        refreshRequestsBtn.setOnAction(e -> refreshPendingRequests());
+
+        requestsHeader.getChildren().addAll(requestsLabel, pendingCountLabel, refreshRequestsBtn);
         
-        leftPanel.getChildren().addAll(usersLabel, userListView, refreshBtn);
+        pendingRequestsListView = new ListView<>();
+        pendingRequestsListView.setPrefHeight(150);
+        pendingRequestsListView.setSelectionModel(null);
+        
+        leftPanel.getChildren().addAll(friendsHeader, userListView, requestsHeader, pendingRequestsListView);
 
         // Center - Chat area
         VBox centerPanel = new VBox(10);
         centerPanel.setPadding(new Insets(10));
 
-        currentChatLabel = new Label("Select a user to chat");
+        currentChatLabel = new Label("Select a friend to chat");
         currentChatLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
         ScrollPane chatScrollPane = new ScrollPane();
@@ -232,27 +290,12 @@ public class ClienteUI extends Application {
             }
         });
 
-        Scene scene = new Scene(mainLayout, 800, 600);
+        Scene scene = new Scene(mainLayout, 900, 600);
         primaryStage.setScene(scene);
         primaryStage.setTitle("P2P Chat - " + nombre);
-        
-        // Refresh user list initially
-        refreshUserList();
 
-        // Set message handler to automatically update the chat
-        peer.setMessageHandler((message, senderName) -> {
-            handleIncomingMessage(message, senderName);
-        });
-        
-        // Set message handler to automatically add newly connected users
-        cliente.setUserAdditionHandler((amigo, interfazAmigo) -> {
-            addUserToList(amigo, true);
-        });
-
-        // Set message handler to automatically remove disconnected users
-        cliente.setUserRemovalHandler((amigo, interfazAmigo) -> {
-            removeUserFromList(amigo);
-        });
+        // Load pending friend requests from server
+        loadPendingRequests();
         
         // Handle window close
         primaryStage.setOnCloseRequest(e -> {
@@ -264,6 +307,192 @@ public class ClienteUI extends Application {
             Platform.exit();
             System.exit(0);
         });
+    }
+
+    private void loadPendingRequests() {
+        new Thread(() -> {
+            try {
+                ArrayList<String> requests = servidor.getFriendRequests(nombre, contrasinal);
+                
+                if (requests != null && !requests.isEmpty()) {
+                    Platform.runLater(() -> {
+                        for (String requesterName : requests) {
+                            addPendingRequest(requesterName);
+                        }
+                        updatePendingCount();
+                    });
+                }
+            } catch (RemoteException e) {
+                System.err.println("Error loading friend requests: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    private void refreshPendingRequests() {
+        new Thread(() -> {
+            try {
+                ArrayList<String> requests = servidor.getFriendRequests(nombre, contrasinal);
+                
+                Platform.runLater(() -> {
+                    // Clear existing requests from UI
+                    pendingRequestItems.clear();
+                    pendingRequestsListView.getItems().clear();
+                    
+                    // Add all current requests
+                    if (requests != null && !requests.isEmpty()) {
+                        for (String requesterName : requests) {
+                            addPendingRequest(requesterName);
+                        }
+                    }
+                    
+                    updatePendingCount();
+                });
+            } catch (RemoteException e) {
+                Platform.runLater(() -> {
+                    showAlert("Error", "Erro ao refrescar solicitudes: " + e.getMessage());
+                });
+                e.printStackTrace();
+            }
+        }).start();
+    }
+    private void showAddFriendDialog() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Engadir Amigo");
+        dialog.setHeaderText("Enviar solicitude de amizade");
+        dialog.setContentText("Nome de usuario:");
+        
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(username -> {
+            if (!username.trim().isEmpty()) {
+                sendFriendRequest(username.trim());
+            }
+        });
+    }
+
+    private void sendFriendRequest(String targetUsername) {
+        if (targetUsername.equals(nombre)) {
+            showInfoAlert("Error", "Non podes enviarte unha solicitude a ti mesmo!");
+            return;
+        }
+        
+        // Check if already friends
+        if (userListItems.containsKey(targetUsername)) {
+            showInfoAlert("Información", "Xa es amigo de " + targetUsername);
+            return;
+        }
+        
+        new Thread(() -> {
+            try {
+                boolean success = servidor.sendFriendRequest(nombre, contrasinal, targetUsername);
+                
+                Platform.runLater(() -> {
+                    if (success) {
+                        showInfoAlert("Éxito", "Solicitude enviada a " + targetUsername);
+                    } else {
+                        showInfoAlert("Error", "Non se puido enviar a solicitude. O usuario pode non existir ou xa tés unha solicitude pendente.");
+                    }
+                });
+            } catch (RemoteException e) {
+                Platform.runLater(() -> {
+                    showAlert("Error", "Erro ao enviar solicitude: " + e.getMessage());
+                });
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    private void addPendingRequest(String requesterName) {
+        HBox requestItem = new HBox(10);
+        requestItem.setAlignment(Pos.CENTER_LEFT);
+        requestItem.setPadding(new Insets(5));
+        requestItem.setStyle("-fx-background-color: #FFF9E6; -fx-background-radius: 5;");
+        
+        Label nameLabel = new Label(requesterName);
+        nameLabel.setStyle("-fx-font-size: 12px;");
+        
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        
+        Button acceptBtn = new Button("✓");
+        acceptBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;");
+        acceptBtn.setTooltip(new Tooltip("Aceptar"));
+        acceptBtn.setOnAction(e -> acceptFriendRequest(requesterName));
+        
+        Button rejectBtn = new Button("✗");
+        rejectBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold;");
+        rejectBtn.setTooltip(new Tooltip("Rexeitar"));
+        rejectBtn.setOnAction(e -> rejectFriendRequest(requesterName));
+        
+        requestItem.getChildren().addAll(nameLabel, spacer, acceptBtn, rejectBtn);
+        
+        pendingRequestItems.put(requesterName, requestItem);
+        pendingRequestsListView.getItems().add(requestItem);
+    }
+
+    private void acceptFriendRequest(String requesterName) {
+        new Thread(() -> {
+            try {
+                boolean success = servidor.answerFriendRequest(nombre, contrasinal, requesterName, true);
+                
+                Platform.runLater(() -> {
+                    if (success) {
+                        // Remove from pending requests
+                        removePendingRequest(requesterName);
+                        
+                        showInfoAlert("Éxito", "Agora es amigo de " + requesterName);
+                    } else {
+                        showInfoAlert("Error", "Non se puido aceptar a solicitude");
+                    }
+                });
+            } catch (RemoteException e) {
+                Platform.runLater(() -> {
+                    showAlert("Error", "Erro ao aceptar solicitude: " + e.getMessage());
+                });
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    private void rejectFriendRequest(String requesterName) {
+        new Thread(() -> {
+            try {
+                boolean success = servidor.answerFriendRequest(nombre, contrasinal, requesterName, false);
+                
+                Platform.runLater(() -> {
+                    if (success) {
+                        removePendingRequest(requesterName);
+                        showInfoAlert("Información", "Solicitude de " + requesterName + " rexeitada");
+                    } else {
+                        showInfoAlert("Error", "Non se puido rexeitar a solicitude");
+                    }
+                });
+            } catch (RemoteException e) {
+                Platform.runLater(() -> {
+                    showAlert("Error", "Erro ao rexeitar solicitude: " + e.getMessage());
+                });
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    private void removePendingRequest(String requesterName) {
+        HBox item = pendingRequestItems.remove(requesterName);
+        if (item != null) {
+            pendingRequestsListView.getItems().remove(item);
+            updatePendingCount();
+        }
+    }
+
+    private void updatePendingCount() {
+        int count = pendingRequestItems.size();
+        pendingCountLabel.setText("(" + count + ")");
+        
+        if (count > 0) {
+            pendingCountLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #d32f2f; -fx-font-weight: bold;");
+        } else {
+            pendingCountLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #666;");
+        }
     }
 
     private void switchToChat(String username) {
@@ -283,21 +512,6 @@ public class ClienteUI extends Application {
         
         // Clear notification icon for this user
         clearNotificationIcon(username);
-    }
-
-    private void refreshUserList() {
-        try {
-            var peers = cliente.getPeerNames();
-            userListView.getItems().clear();
-            userListItems.clear();
-            userNotificationIcons.clear();
-            
-            for (String peerName : peers) {
-                addUserToList(peerName, false);
-            }
-        } catch (RemoteException e) {
-            showAlert("Error", "Failed to refresh user list: " + e.getMessage());
-        }
     }
 
     private void addUserToList(String username, boolean isNewUser) {
@@ -320,11 +534,12 @@ public class ClienteUI extends Application {
         Circle messageNotification = new Circle(5, Color.RED);
         messageNotification.setVisible(false);
         
-        // New user notification icon (green circle)
-        Circle newUserNotification = new Circle(5, Color.GREEN);
-        newUserNotification.setVisible(isNewUser);
+        // New user notification icon (badge)
+        Label newUserBadge = new Label("NOVO");
+        newUserBadge.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-size: 9px; -fx-padding: 2 4; -fx-background-radius: 3;");
+        newUserBadge.setVisible(isNewUser);
         
-        userItem.getChildren().addAll(usernameLabel, spacer, messageNotification, newUserNotification);
+        userItem.getChildren().addAll(usernameLabel, spacer, messageNotification, newUserBadge);
         
         userListItems.put(username, userItem);
         userNotificationIcons.put(username, messageNotification);
@@ -338,11 +553,11 @@ public class ClienteUI extends Application {
         Platform.runLater(() -> {
             userListView.getItems().add(userItem);
             
-            // Auto-hide the new user notification after 3 seconds using Timeline
+            // Auto-hide the new user badge after 5 seconds
             if (isNewUser) {
                 Timeline timeline = new Timeline(new KeyFrame(
-                    javafx.util.Duration.seconds(3),
-                    event -> newUserNotification.setVisible(false)
+                    javafx.util.Duration.seconds(5),
+                    event -> newUserBadge.setVisible(false)
                 ));
                 timeline.setCycleCount(1);
                 timeline.play();
@@ -351,21 +566,17 @@ public class ClienteUI extends Application {
     }
 
     private void removeUserFromList(String username) {
-        // Create disconnected message
-        Label disconnectLabel = new Label("--- " + username + " disconnected ---");
-        disconnectLabel.setWrapText(true);
-        disconnectLabel.setMaxWidth(400);
-        disconnectLabel.setPadding(new Insets(5, 10, 5, 10));
-        disconnectLabel.setStyle("-fx-background-color: #FFE4B5; -fx-background-radius: 10; -fx-text-fill: #8B4513; -fx-font-style: italic;");
-        disconnectLabel.setAlignment(Pos.CENTER); 
-
-        // Check if we're currently chatting with the disconnected use
-        if (username.equals(currentChatUser)) {
-            // Add the disconnect message to the current chat view as well
+        // Add disconnect message to history (preserves it)
+        Label disconnectLabel = createDisconnectLabel(username);
+        VBox history = chatHistories.get(username);
+        if (history != null) {
+            history.getChildren().add(disconnectLabel);
+        }
+        
+        // Check if we're currently chatting with the disconnected user
+        if (username.equals(currentChatUser)) {            
             Platform.runLater(() -> {
                 chatArea.getChildren().add(disconnectLabel);
-                
-                // Disable sending messages but keep the chat open
                 messageField.setDisable(true);
                 sendBtn.setDisable(true);
                 currentChatLabel.setText("Chat with: " + username + " (Offline)");
@@ -377,15 +588,22 @@ public class ClienteUI extends Application {
         
         // Remove from user list
         HBox item = userListItems.remove(username);
-
-        // Remove from chat history
-        chatHistories.remove(username);
-
+                
         if (item != null) {
             Platform.runLater(() -> {
                 userListView.getItems().remove(item);
             });
         }
+    }
+
+    private Label createDisconnectLabel(String username) {
+        Label disconnectLabel = new Label("--- " + username + " disconnected ---");
+        disconnectLabel.setWrapText(true);
+        disconnectLabel.setMaxWidth(400);
+        disconnectLabel.setPadding(new Insets(5, 10, 5, 10));
+        disconnectLabel.setStyle("-fx-background-color: #FFE4B5; -fx-background-radius: 10; -fx-text-fill: #8B4513; -fx-font-style: italic;");
+        disconnectLabel.setAlignment(Pos.CENTER);
+        return disconnectLabel;
     }
 
     private String getUsernameFromListItem(HBox item) {
@@ -488,6 +706,14 @@ public class ClienteUI extends Application {
         alert.setHeaderText(title);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    private void showInfoAlert(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.show();
     }
 
     public static void main(String[] args) {
