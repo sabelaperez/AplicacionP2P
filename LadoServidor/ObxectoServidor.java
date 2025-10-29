@@ -4,15 +4,18 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.Scanner;
 
 public class ObxectoServidor {
     public static void main(String[] args) {
+        // Crear o scanner
+        Scanner scan = new Scanner(System.in);
         try {
             // Obter o porto
             int porto = -1;
             while (porto <= 0) {
                 System.out.println("Inserte o porto:");
-                String entrada = System.console().readLine();
+                String entrada = scan.nextLine().trim();
                 try {
                     porto = Integer.parseInt(entrada);
                     if (porto <= 0) {
@@ -43,6 +46,9 @@ public class ObxectoServidor {
 
         } catch (Exception e) {
             System.out.println("Ocorreu un erro: " + e);
+        }
+        finally{
+            scan.close();
         }
     }
 
