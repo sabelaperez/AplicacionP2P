@@ -1,0 +1,133 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+// Configure Gradle to use your existing directory structure
+sourceSets {
+    main {
+        java {
+            srcDirs = ['.']
+            include 'LadoCliente/**/*.java', 'LadoServidor/**/*.java'
+            exclude 'build/**', '.gradle/**', '.git/**', 'gradle/**', 'gradlew', 'gradlew.bat', 'settings.gradle', 'build.gradle', 'README.md'
+        
+        }
+        resources {
+            srcDirs = ['resources']  // We'll create this for FXML files
+        }
+    }
+}
+
+dependencies {
+    // JavaFX dependencies
+    implementation 'org.openjfx:javafx-controls:21.0.1'
+    implementation 'org.openjfx:javafx-fxml:21.0.1'
+    
+    // For better UI components
+    implementation 'org.controlsfx:controlsfx:11.1.2'
+}
+
+javafx {
+    version = '21.0.1'
+    modules = ['javafx.controls', 'javafx.fxml']
+}
+
+application {
+    mainClass = 'LadoCliente.ui.ClienteApp'
+}
+
+// Task to run the server
+task runServer(type: JavaExec) {
+    group = 'application'
+    description = 'Run the P2P Server'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'LadoServidor.ObxectoServidor'
+    standardInput = System.in
+
+    // Force console mode
+    systemProperty 'gradle.console', 'plain'
+}
+
+// Task to run the console client (old version)
+task runConsoleClient(type: JavaExec) {
+    group = 'application'
+    description = 'Run the P2P Console Client'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'LadoCliente.ObxectoCliente'
+    standardInput = System.in
+
+    // Force console mode
+    systemProperty 'gradle.console', 'plain'
+}
+
+// Task to run the JavaFX client
+task runClient(type: JavaExec) {
+    group = 'application'
+    description = 'Run the P2P JavaFX Client'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'LadoCliente.ClienteApp'
+    
+    standardInput = System.in
+}
+
+// Configure JAR tasks
+jar {
+    manifest {
+        attributes(
+            'Main-Class': 'LadoCliente.ClienteApp'
+        )
+    }
+}
+
+// Create fat JAR for client with all dependencies
+task clientJar(type: Jar) {
+    group = 'build'
+    description = 'Create a fat JAR for the client application'
+    archiveBaseName = 'p2p-client'
+    archiveClassifier = 'all'
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
+    manifest {
+        attributes(
+            'Main-Class': 'LadoCliente.ClienteApp'
+        )
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+// Create fat JAR for server with all dependencies
+task serverJar(type: Jar) {
+    group = 'build'
+    description = 'Create a fat JAR for the server application'
+    archiveBaseName = 'p2p-server'
+    archiveClassifier = 'all'
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
+    manifest {
+        attributes(
+            'Main-Class': 'LadoServidor.ObxectoServidor'
+        )
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}

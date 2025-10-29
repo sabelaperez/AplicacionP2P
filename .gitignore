@@ -1,2 +1,7 @@
 LadoServidor/*.class
 LadoCliente/*.class
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
