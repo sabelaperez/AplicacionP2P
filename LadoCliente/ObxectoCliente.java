@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 import LadoServidor.InterfaceServidor;
@@ -182,7 +183,6 @@ public class ObxectoCliente {
                             System.out.println("Error al cambiar la contraseña: " + exception.getMessage());
                         }
                         break;
-
                     case "delete":
                         // Elimina o usuario da base de datos do servidor
                         try {
@@ -210,6 +210,68 @@ public class ObxectoCliente {
                         exit = true;
                         break;
 
+                    case "request":
+                        // Enviar una solicitud de amistad
+                        System.out.println("Introduce el nombre del destinatario: ");
+                        String amigoSolicitado = scan.nextLine().trim();
+                        
+                        try{
+                            if(!servidor.sendFriendRequest(nombre, contrasinal, amigoSolicitado)){
+                                System.out.println("No se ha podido enviar la solicitud de amistad. Nombre de usuario/contraseña incorrectos, el usuario no existe, ya se ha enviado una invitación o ya es tu amigo");
+                            }
+                        }
+                        catch(RemoteException exception){
+                            System.out.println("Error al enviar la solicitud de amistad: " + exception.getMessage());
+                        }
+                        break;
+
+                    case "invites":
+                        // Obtener las solicitudes de amistad pendientes
+                        try{
+                            ArrayList<String> invitaciones = servidor.getFriendRequests(nombre, contrasinal);
+                            
+                            // Imprimir las invitaciones
+                            if(invitaciones.size() > 0){
+                                System.out.println("Tienes las siguientes solicitudes de amistad: ");
+                                for(String i : invitaciones){
+                                    System.out.println("-> " + i);
+                                }
+                            }
+                            else{
+                                System.out.println("No tienes ninguna solicitud de amistad pendiente");
+                            }
+                        }
+                        catch(RemoteException exception){
+                            System.out.println("Error al obtener las solicitudes de amistad: " + exception.getMessage());
+                        }
+                        break;
+
+                    case "answer":
+                        // Responder a una solicitud de amistad pendientes
+                        System.out.println("Introduce el nombre de la invitación a la que quieres responder: ");
+                        String amigoRespondido = scan.nextLine().trim();
+
+                        String respuesta = "";
+                        do{
+                            System.out.println("Introduce tu respuesta (Aceptar/Rechazar): ");
+                            respuesta = scan.nextLine().trim().toLowerCase();
+                        }while (!respuesta.equals("aceptar") && !respuesta.equals("rechazar") && !respuesta.equals("a") && !respuesta.equals("r"));
+                        
+                        boolean respuestaBool = (respuesta.equals("aceptar") || respuesta.equals("a")) ? true : false;
+
+                        try{
+                            if(servidor.answerFriendRequest(nombre, contrasinal, amigoRespondido, respuestaBool)){
+                                System.out.println("Se ha respondido a la solicitud satisfactoriamente!");
+                            }
+                            else{
+                                System.out.println("No se ha podido responder a la solicitud. Nombre de usuario/contraseña incorrecta o la solicitud no existía");
+                            }
+                        }
+                        catch(RemoteException exception){
+                            System.out.println("Error al responder a la solicitud de amistad: " + exception.getMessage());
+                        }
+                        break;
+
                     default:
                         System.out.println("\nComando no reconocido");
                         printMenu();
@@ -231,5 +293,8 @@ public class ObxectoCliente {
         System.out.println("passwd - Cambiar la contraseña del usuario");
         System.out.println("delete - Eliminar el usuario registrado");
         System.out.println("exit - Desconectar y salir del programa");
+        System.out.println("request - Envía una solicitud de amistad a otro usuario");
+        System.out.println("invites - Muestra la lista de solicitudes de amistad pendientes");
+        System.out.println("answer - Responde a una solicitud de amistad");
     }
 }

@@ -266,7 +266,9 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         // Notificar al resto de amigos de la baja
         for(String amigo : this.amigos.get(usuario)){
             Interfaces interfacesAmigo = clientesEnLinea.get(amigo);
-            interfacesAmigo.cliente().removeUsuarioEnLinea(usuario);
+            if(interfacesAmigo != null){
+                interfacesAmigo.cliente().removeUsuarioEnLinea(usuario);
+            }
         }
 
         // Considerar eliminar as solicitudes de amizade relacionadas
@@ -282,21 +284,22 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
 
     public boolean logIn(InterfaceCliente usuario, InterfacePeer peer, String contrasinal) throws RemoteException{
         // Comprobar se o usuario está autenticado
-        if(!authenticate(peer.getName(), contrasinal)){
+        String nombreUsuario = peer.getName();
+        if(!authenticate(nombreUsuario, contrasinal)){
             return false;
         }
 
         // Añadir al nuevo usuario a la lista de usuarios en línea
-        String nombreUsuario = peer.getName();
+        
         Interfaces datosUsuario = new Interfaces(usuario, peer);
         clientesEnLinea.put(nombreUsuario, datosUsuario);
 
         System.out.println("Se ha registrado un nuevo usuario en el servidor");
         
-        // ERRO AQUÍ
         for(String amigo : this.amigos.get(nombreUsuario)){
             Interfaces interfacesAmigo = clientesEnLinea.get(amigo);
-            if(interfacesAmigo.cliente() != usuario){
+            // Si no está en línea, puede ser null!
+            if(interfacesAmigo != null && interfacesAmigo.cliente() != usuario){
                 // Notificar a todos los amigos del usuario del nuevo registro
                 interfacesAmigo.cliente().addUsuarioEnLinea(peer);
 
@@ -326,7 +329,9 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         // Notificar al resto de amigos de la baja
         for(String amigo : this.amigos.get(usuario)){
             Interfaces interfacesAmigo = clientesEnLinea.get(amigo);
-            interfacesAmigo.cliente().removeUsuarioEnLinea(usuario);
+            if(interfacesAmigo != null){
+                interfacesAmigo.cliente().removeUsuarioEnLinea(usuario);
+            }
         }
         
         return true;
@@ -335,6 +340,21 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
     public boolean sendFriendRequest(String usuario, String contraseña, String nombreAmigo) throws RemoteException{
         // Comprobar se o usuario está autenticado
         if(!authenticate(usuario, contraseña)){
+            return false;
+        }
+
+        // Comprobar que el amigo deseado existe en la BD
+        if(this.usuariosRegistrados.get(nombreAmigo) == null){
+            return false;
+        }
+
+        // Comprobar que la persona no es ya tu amiga
+        if(this.amigos.get(usuario).contains(nombreAmigo)){
+            return false;
+        }
+
+        // Comprobar que no hay ya una solicitud emitida ya
+        if(this.solicitudesAmistad.get(nombreAmigo).contains(usuario)){
             return false;
         }
 
@@ -386,6 +406,9 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
                 propioUsuario.cliente().addUsuarioEnLinea(nuevoAmigo.peer());
                 nuevoAmigo.cliente().addUsuarioEnLinea(propioUsuario.peer());
             }
+
+            // Como la amistad es recíproca, si hay invitación en otro sentido se puede eliminar ya
+            this.solicitudesAmistad.get(nombreAmigo).remove(usuario);
         }
 
         // Eliminar la solicitud de la lista de solicitudes pendientes, en todos los casos
