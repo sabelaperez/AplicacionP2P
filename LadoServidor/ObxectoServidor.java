@@ -32,8 +32,9 @@ public class ObxectoServidor {
 
             // Hook para actualizar a base de datos ao pechar o servidor
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                boolean actualizado = obxectoExportado.gardarUsuarios();
-                if (actualizado) {
+                boolean actualizado1 = obxectoExportado.gardarUsuarios();
+                boolean actualizado2 = obxectoExportado.gardarSolicitudes();
+                if (actualizado1 && actualizado2) {
                     System.out.println("Base de datos actualizada correctamente.");
                 } else {
                     System.out.println("Erro ao actualizar a base de datos.");
