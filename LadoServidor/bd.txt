@@ -5,9 +5,13 @@ Juan 1234
 Carlos bonjour
 
 USER NUMBER
-Marta 0
-Diego 1
+Marta 2
+Diego
+Juan
+Diego 2
 Marta
-Juan 0
+Carlos
+Juan 1
+Marta
 Carlos 1
 Diego

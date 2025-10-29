@@ -212,6 +212,8 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
             e.printStackTrace();
         }
 
+        System.out.println("Solicitudes cargadas: " + solicitudes);
+
         return solicitudes;
     }
 
@@ -342,30 +344,34 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         if(!authenticate(usuario, contraseña)){
             return false;
         }
+        System.out.println("Usuario autenticado");
 
         // Comprobar que el amigo deseado existe en la BD
         if(this.usuariosRegistrados.get(nombreAmigo) == null){
             return false;
         }
+        System.out.println("Amigo existe en la BD");
 
         // Comprobar que la persona no es ya tu amiga
         if(this.amigos.get(usuario).contains(nombreAmigo)){
             return false;
         }
+        System.out.println("No son ya amigos");
 
         // Comprobar que no hay ya una solicitud emitida ya
-        if(this.solicitudesAmistad.get(nombreAmigo).contains(usuario)){
+        ArrayList<String> solicitudesExistentes = this.solicitudesAmistad.get(nombreAmigo);
+        // Se non existe ningunha solicitud previa, inicializar a lista
+        if (solicitudesExistentes == null) {
+            solicitudesExistentes = new ArrayList<>();
+        }   
+        if(solicitudesExistentes.contains(usuario)){
             return false;
         }
+        System.out.println("No hay solicitud ya emitida");
 
         // Añadir solicitud de amistad
-        ArrayList<String> amigosExistentes = this.solicitudesAmistad.get(nombreAmigo);
-        if(amigosExistentes == null){
-            // Crear un ArrayList nuevo
-            amigosExistentes = new ArrayList<>();
-        }
-        amigosExistentes.add(usuario);
-        this.solicitudesAmistad.put(nombreAmigo, amigosExistentes);
+        solicitudesExistentes.add(usuario);
+        this.solicitudesAmistad.put(nombreAmigo, solicitudesExistentes);
 
         return true;
     }
@@ -390,14 +396,24 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
             return false;
         }
 
+        System.out.println("Usuario autenticado");
+
         // Comprobar que existe la solicitud de amistad
-        if(!this.solicitudesAmistad.get(usuario).contains(nombreAmigo)){
+        if(this.solicitudesAmistad.get(usuario) == null){
             return false;
         }
+        if(!solicitudesAmistad.get(usuario).contains(nombreAmigo)){
+            return false;
+        }
+
+        System.out.println("Solicitud de amistad existe");
 
         // Responder a la solicitud de amistad
         if(aceptar){
             amigos.get(usuario).add(nombreAmigo);
+            amigos.get(nombreAmigo).add(usuario);
+
+            System.out.println("Engadidos á lista de amigos");
 
             // Si el amigo está en línea, les mandas sus respectivos peers
             Interfaces nuevoAmigo = clientesEnLinea.get(nombreAmigo);
@@ -407,14 +423,22 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
                 nuevoAmigo.cliente().addUsuarioEnLinea(propioUsuario.peer());
             }
 
+            System.out.println("Notificados os usuarios en liña");
+
             // Como la amistad es recíproca, si hay invitación en otro sentido se puede eliminar ya
-            this.solicitudesAmistad.get(nombreAmigo).remove(usuario);
+            if(solicitudesAmistad.get(nombreAmigo) != null){
+                this.solicitudesAmistad.get(nombreAmigo).remove(usuario);
+            }
         }
 
         // Eliminar la solicitud de la lista de solicitudes pendientes, en todos los casos
         if(!this.solicitudesAmistad.get(usuario).remove(nombreAmigo)){
             return false;
         }
+
+        System.out.println("Usuarios cargados: " + usuariosRegistrados.keySet());
+        System.out.println("Amizades cargadas: " + amigos);
+        System.out.println("Solicitudes cargadas: " + solicitudesAmistad);
 
         return true;
     }
