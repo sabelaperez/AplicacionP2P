@@ -218,6 +218,8 @@ public class ObxectoCliente {
                         try{
                             if(!servidor.sendFriendRequest(nombre, contrasinal, amigoSolicitado)){
                                 System.out.println("No se ha podido enviar la solicitud de amistad. Nombre de usuario/contraseña incorrectos, el usuario no existe, ya se ha enviado una invitación o ya es tu amigo");
+                            } else{
+                                System.out.println("Solicitud de amistad enviada a " + amigoSolicitado);
                             }
                         }
                         catch(RemoteException exception){
@@ -261,7 +263,7 @@ public class ObxectoCliente {
 
                         try{
                             if(servidor.answerFriendRequest(nombre, contrasinal, amigoRespondido, respuestaBool)){
-                                System.out.println("Se ha respondido a la solicitud satisfactoriamente!");
+                                System.out.println(amigoRespondido + " ha sido " + (respuestaBool ? "aceptado" : "rechazado") + " como amigo.");
                             }
                             else{
                                 System.out.println("No se ha podido responder a la solicitud. Nombre de usuario/contraseña incorrecta o la solicitud no existía");
@@ -296,5 +298,6 @@ public class ObxectoCliente {
         System.out.println("request - Envía una solicitud de amistad a otro usuario");
         System.out.println("invites - Muestra la lista de solicitudes de amistad pendientes");
         System.out.println("answer - Responde a una solicitud de amistad");
+        System.out.print("");
     }
 }
