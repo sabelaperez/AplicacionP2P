@@ -1,5 +1,7 @@
 package LadoCliente;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -7,28 +9,43 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.util.HashMap;
+import java.util.Map;
 
 import LadoServidor.InterfaceServidor;
 
 public class ClienteUI extends Application {
     
     private InterfaceServidor servidor;
-    private InterfaceCliente cliente;
-    private InterfacePeer peer;
+    private ImplInterfaceCliente cliente;
+    private ImplInterfacePeer peer;
     private String nombre;
     private String contrasinal;
     
     private Stage primaryStage;
-    private ListView<String> userListView;
+    private ListView<HBox> userListView;
     private VBox chatArea;
     private TextField messageField;
+    private Button sendBtn;
     private Label currentChatLabel;
     private String currentChatUser = null;
+    
+    // Store chat history for each user
+    private Map<String, VBox> chatHistories = new HashMap<>();
+    
+    // Store notification indicators for each user
+    private Map<String, Circle> userNotificationIcons = new HashMap<>();
+    
+    // Store HBox containers for each user in the list
+    private Map<String, HBox> userListItems = new HashMap<>();
 
     @Override
     public void start(Stage primaryStage) {
@@ -101,8 +118,12 @@ public class ClienteUI extends Application {
     private void handleLogin(String ip, String port, String username, 
                             String password, boolean isRegister, Label statusLabel) {
         try {
+            // Check if arguments are correct
+            InetAddress direccionIP = InetAddress.getByName(ip);
+            Integer puerto = Integer.parseInt(port);
+
             // Connect to server
-            String urlRegistro = "rmi://" + ip + ":" + port + "/servidorRemoto";
+            String urlRegistro = "rmi://" + direccionIP.getHostAddress() + ":" + puerto + "/servidorRemoto";
             servidor = (InterfaceServidor) Naming.lookup(urlRegistro);
             
             nombre = username;
@@ -116,6 +137,7 @@ public class ClienteUI extends Application {
             if (isRegister) {
                 success = servidor.registerUser(nombre, contrasinal);
                 if (success) {
+                    // Automatically logs into the interface
                     servidor.logIn(cliente, peer, contrasinal);
                     statusLabel.setText("Registered successfully!");
                     showMainUI();
@@ -130,8 +152,17 @@ public class ClienteUI extends Application {
                     statusLabel.setText("Invalid credentials!");
                 }
             }
-        } catch (Exception e) {
-            statusLabel.setText("Connection error: " + e.getMessage());
+        }
+        catch (UnknownHostException e) {
+            showAlert("La dirección IP es inválida", e.getMessage());
+            e.printStackTrace();
+        }
+        catch (NumberFormatException e){
+            showAlert("El puerto introducido no es válido", e.getMessage());
+            e.printStackTrace();
+        }
+        catch (Exception e) {
+            showAlert("Error de conexión", e.getMessage());
             e.printStackTrace();
         }
     }
@@ -146,13 +177,13 @@ public class ClienteUI extends Application {
         leftPanel.setPadding(new Insets(10));
         leftPanel.setStyle("-fx-background-color: #f0f0f0;");
 
-        Label usersLabel = new Label("Online Users");
+        Label usersLabel = new Label("Usuarios en Liña");
         usersLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
         
         userListView = new ListView<>();
         userListView.setPrefHeight(400);
         
-        Button refreshBtn = new Button("Refresh");
+        Button refreshBtn = new Button("Refrescar");
         refreshBtn.setOnAction(e -> refreshUserList());
         
         leftPanel.getChildren().addAll(usersLabel, userListView, refreshBtn);
@@ -177,7 +208,7 @@ public class ClienteUI extends Application {
         messageField.setPrefWidth(400);
         messageField.setDisable(true);
         
-        Button sendBtn = new Button("Send");
+        sendBtn = new Button("Send");
         sendBtn.setDisable(true);
         sendBtn.setOnAction(e -> sendMessage());
         
@@ -192,13 +223,12 @@ public class ClienteUI extends Application {
 
         // User list selection handler
         userListView.setOnMouseClicked(e -> {
-            String selectedUser = userListView.getSelectionModel().getSelectedItem();
-            if (selectedUser != null) {
-                currentChatUser = selectedUser;
-                currentChatLabel.setText("Chat with: " + selectedUser);
-                messageField.setDisable(false);
-                sendBtn.setDisable(false);
-                chatArea.getChildren().clear();
+            HBox selectedItem = userListView.getSelectionModel().getSelectedItem();
+            if (selectedItem != null) {
+                String selectedUser = getUsernameFromListItem(selectedItem);
+                if (selectedUser != null) {
+                    switchToChat(selectedUser);
+                }
             }
         });
 
@@ -208,6 +238,21 @@ public class ClienteUI extends Application {
         
         // Refresh user list initially
         refreshUserList();
+
+        // Set message handler to automatically update the chat
+        peer.setMessageHandler((message, senderName) -> {
+            handleIncomingMessage(message, senderName);
+        });
+        
+        // Set message handler to automatically add newly connected users
+        cliente.setUserAdditionHandler((amigo, interfazAmigo) -> {
+            addUserToList(amigo, true);
+        });
+
+        // Set message handler to automatically remove disconnected users
+        cliente.setUserRemovalHandler((amigo, interfazAmigo) -> {
+            removeUserFromList(amigo);
+        });
         
         // Handle window close
         primaryStage.setOnCloseRequest(e -> {
@@ -217,16 +262,149 @@ public class ClienteUI extends Application {
                 ex.printStackTrace();
             }
             Platform.exit();
+            System.exit(0);
         });
+    }
+
+    private void switchToChat(String username) {
+        currentChatUser = username;
+        currentChatLabel.setText("Chat with: " + username);
+        messageField.setDisable(false);
+        sendBtn.setDisable(false);
+        
+        // Clear current chat area
+        chatArea.getChildren().clear();
+        
+        // Load chat history for this user
+        VBox history = chatHistories.get(username);
+        if (history != null) {
+            chatArea.getChildren().addAll(history.getChildren());
+        }
+        
+        // Clear notification icon for this user
+        clearNotificationIcon(username);
     }
 
     private void refreshUserList() {
         try {
             var peers = cliente.getPeerNames();
             userListView.getItems().clear();
-            userListView.getItems().addAll(peers);
+            userListItems.clear();
+            userNotificationIcons.clear();
+            
+            for (String peerName : peers) {
+                addUserToList(peerName, false);
+            }
         } catch (RemoteException e) {
             showAlert("Error", "Failed to refresh user list: " + e.getMessage());
+        }
+    }
+
+    private void addUserToList(String username, boolean isNewUser) {
+        // Skip if user already exists in the list
+        if (userListItems.containsKey(username)) {
+            return;
+        }
+        
+        HBox userItem = new HBox(10);
+        userItem.setAlignment(Pos.CENTER_LEFT);
+        userItem.setPadding(new Insets(5));
+        
+        Label usernameLabel = new Label(username);
+        usernameLabel.setStyle("-fx-font-size: 14px;");
+        
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        
+        // Message notification icon (red circle)
+        Circle messageNotification = new Circle(5, Color.RED);
+        messageNotification.setVisible(false);
+        
+        // New user notification icon (green circle)
+        Circle newUserNotification = new Circle(5, Color.GREEN);
+        newUserNotification.setVisible(isNewUser);
+        
+        userItem.getChildren().addAll(usernameLabel, spacer, messageNotification, newUserNotification);
+        
+        userListItems.put(username, userItem);
+        userNotificationIcons.put(username, messageNotification);
+        
+        // Initialize chat history for this user if not exists
+        if (!chatHistories.containsKey(username)) {
+            chatHistories.put(username, new VBox(5));
+            chatHistories.get(username).setPadding(new Insets(10));
+        }
+        
+        Platform.runLater(() -> {
+            userListView.getItems().add(userItem);
+            
+            // Auto-hide the new user notification after 3 seconds using Timeline
+            if (isNewUser) {
+                Timeline timeline = new Timeline(new KeyFrame(
+                    javafx.util.Duration.seconds(3),
+                    event -> newUserNotification.setVisible(false)
+                ));
+                timeline.setCycleCount(1);
+                timeline.play();
+            }
+        });
+    }
+
+    private void removeUserFromList(String username) {
+        // Create disconnected message
+        Label disconnectLabel = new Label("--- " + username + " disconnected ---");
+        disconnectLabel.setWrapText(true);
+        disconnectLabel.setMaxWidth(400);
+        disconnectLabel.setPadding(new Insets(5, 10, 5, 10));
+        disconnectLabel.setStyle("-fx-background-color: #FFE4B5; -fx-background-radius: 10; -fx-text-fill: #8B4513; -fx-font-style: italic;");
+        disconnectLabel.setAlignment(Pos.CENTER); 
+
+        // Check if we're currently chatting with the disconnected use
+        if (username.equals(currentChatUser)) {
+            // Add the disconnect message to the current chat view as well
+            Platform.runLater(() -> {
+                chatArea.getChildren().add(disconnectLabel);
+                
+                // Disable sending messages but keep the chat open
+                messageField.setDisable(true);
+                sendBtn.setDisable(true);
+                currentChatLabel.setText("Chat with: " + username + " (Offline)");
+            });
+        }
+        
+        // Remove from notification icons
+        userNotificationIcons.remove(username);
+        
+        // Remove from user list
+        HBox item = userListItems.remove(username);
+
+        // Remove from chat history
+        chatHistories.remove(username);
+
+        if (item != null) {
+            Platform.runLater(() -> {
+                userListView.getItems().remove(item);
+            });
+        }
+    }
+
+    private String getUsernameFromListItem(HBox item) {
+        if (item.getChildren().get(0) instanceof Label) {
+            return ((Label) item.getChildren().get(0)).getText();
+        }
+        return null;
+    }
+
+    private void handleIncomingMessage(String message, String senderName) {
+        // Add message to the sender's chat history
+        addMessageToHistory(senderName, senderName + ": " + message, false);
+        
+        // If the message is from a different user than the currently selected one, show notification
+        if (!senderName.equals(currentChatUser)) {
+            showNotificationIcon(senderName);
+        } else {
+            // If we're currently chatting with this user, display the message
+            addMessageToCurrentChat(senderName + ": " + message, false);
         }
     }
 
@@ -240,7 +418,11 @@ public class ClienteUI extends Application {
             InterfacePeer targetPeer = ((ImplInterfaceCliente) cliente).find(currentChatUser);
             if (targetPeer != null) {
                 targetPeer.receiveMessage(message, nombre);
-                addMessageToChat("You: " + message, true);
+                
+                String formattedMessage = "You: " + message;
+                addMessageToHistory(currentChatUser, formattedMessage, true);
+                addMessageToCurrentChat(formattedMessage, true);
+                
                 messageField.clear();
             } else {
                 showAlert("Error", "User not found!");
@@ -250,7 +432,26 @@ public class ClienteUI extends Application {
         }
     }
 
-    private void addMessageToChat(String message, boolean isSent) {
+    private void addMessageToHistory(String username, String message, boolean isSent) {
+        VBox history = chatHistories.get(username);
+        if (history == null) {
+            history = new VBox(5);
+            history.setPadding(new Insets(10));
+            chatHistories.put(username, history);
+        }
+        
+        Label msgLabel = createMessageLabel(message, isSent);
+        history.getChildren().add(msgLabel);
+    }
+
+    private void addMessageToCurrentChat(String message, boolean isSent) {
+        Label msgLabel = createMessageLabel(message, isSent);
+        Platform.runLater(() -> {
+            chatArea.getChildren().add(msgLabel);
+        });
+    }
+
+    private Label createMessageLabel(String message, boolean isSent) {
         Label msgLabel = new Label(message);
         msgLabel.setWrapText(true);
         msgLabel.setMaxWidth(400);
@@ -264,12 +465,27 @@ public class ClienteUI extends Application {
             msgLabel.setAlignment(Pos.CENTER_LEFT);
         }
         
-        Platform.runLater(() -> chatArea.getChildren().add(msgLabel));
+        return msgLabel;
+    }
+
+    private void showNotificationIcon(String username) {
+        Circle notificationIcon = userNotificationIcons.get(username);
+        if (notificationIcon != null) {
+            Platform.runLater(() -> notificationIcon.setVisible(true));
+        }
+    }
+
+    private void clearNotificationIcon(String username) {
+        Circle notificationIcon = userNotificationIcons.get(username);
+        if (notificationIcon != null) {
+            Platform.runLater(() -> notificationIcon.setVisible(false));
+        }
     }
 
     private void showAlert(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
+        alert.setHeaderText(title);
         alert.setContentText(content);
         alert.showAndWait();
     }
