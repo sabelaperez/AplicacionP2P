@@ -183,6 +183,7 @@ public class ObxectoCliente {
                             System.out.println("Error al cambiar la contraseña: " + exception.getMessage());
                         }
                         break;
+
                     case "delete":
                         // Elimina o usuario da base de datos do servidor
                         try {
@@ -299,5 +300,6 @@ public class ObxectoCliente {
         System.out.println("invites - Muestra la lista de solicitudes de amistad pendientes");
         System.out.println("answer - Responde a una solicitud de amistad");
         System.out.print("");
+
     }
 }
