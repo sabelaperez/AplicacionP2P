@@ -12,9 +12,7 @@ repositories {
 sourceSets {
     main {
         java {
-            srcDirs = ['.']
-            include 'LadoCliente/**/*.java', 'LadoServidor/**/*.java'
-            exclude 'build/**', '.gradle/**', '.git/**', 'gradle/**', 'gradlew', 'gradlew.bat', 'settings.gradle', 'build.gradle', 'README.md'
+            srcDirs = ['src']
         
         }
         resources {
@@ -38,7 +36,7 @@ javafx {
 }
 
 application {
-    mainClass = 'LadoCliente.ui.ClienteApp'
+    mainClass = 'LadoCliente.ClienteUI'
 }
 
 // Task to run the server
@@ -70,9 +68,14 @@ task runClient(type: JavaExec) {
     group = 'application'
     description = 'Run the P2P JavaFX Client'
     classpath = sourceSets.main.runtimeClasspath
-    mainClass = 'LadoCliente.ClienteApp'
+    mainClass = 'LadoCliente.ClienteUI'
     
-    standardInput = System.in
+    doFirst {
+        jvmArgs = [
+            '--module-path', classpath.asPath,
+            '--add-modules', 'javafx.controls,javafx.fxml'
+        ]
+    }
 }
 
 // Configure JAR tasks
