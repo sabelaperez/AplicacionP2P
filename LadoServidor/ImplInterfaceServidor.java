@@ -126,9 +126,6 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
             e.printStackTrace();
         }
 
-        System.out.println("Usuarios cargados: " + usuarios.keySet());
-        System.out.println("Amizades cargadas: " + amigos);
-
         return usuarios;
     }
 
@@ -266,7 +263,9 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         // Notificar al resto de amigos de la baja
         for(String amigo : this.amigos.get(usuario)){
             Interfaces interfacesAmigo = clientesEnLinea.get(amigo);
-            interfacesAmigo.cliente().removeUsuarioEnLinea(usuario);
+            if(interfacesAmigo != null){
+                interfacesAmigo.cliente().removeUsuarioEnLinea(usuario);
+            }
         }
 
         // Considerar eliminar as solicitudes de amizade relacionadas
@@ -282,21 +281,22 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
 
     public boolean logIn(InterfaceCliente usuario, InterfacePeer peer, String contrasinal) throws RemoteException{
         // Comprobar se o usuario está autenticado
-        if(!authenticate(peer.getName(), contrasinal)){
+        String nombreUsuario = peer.getName();
+        if(!authenticate(nombreUsuario, contrasinal)){
             return false;
         }
 
         // Añadir al nuevo usuario a la lista de usuarios en línea
-        String nombreUsuario = peer.getName();
+        
         Interfaces datosUsuario = new Interfaces(usuario, peer);
         clientesEnLinea.put(nombreUsuario, datosUsuario);
 
         System.out.println("Se ha registrado un nuevo usuario en el servidor");
         
-        // ERRO AQUÍ
         for(String amigo : this.amigos.get(nombreUsuario)){
             Interfaces interfacesAmigo = clientesEnLinea.get(amigo);
-            if(interfacesAmigo.cliente() != usuario){
+            // Si no está en línea, puede ser null!
+            if(interfacesAmigo != null && interfacesAmigo.cliente() != usuario){
                 // Notificar a todos los amigos del usuario del nuevo registro
                 interfacesAmigo.cliente().addUsuarioEnLinea(peer);
 
@@ -305,7 +305,6 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
             }
         } 
 
-        System.out.println("Usuarios en línea: " + clientesEnLinea.keySet());
         return true;
     }
 
@@ -326,7 +325,9 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         // Notificar al resto de amigos de la baja
         for(String amigo : this.amigos.get(usuario)){
             Interfaces interfacesAmigo = clientesEnLinea.get(amigo);
-            interfacesAmigo.cliente().removeUsuarioEnLinea(usuario);
+            if(interfacesAmigo != null){
+                interfacesAmigo.cliente().removeUsuarioEnLinea(usuario);
+            }
         }
         
         return true;
@@ -338,14 +339,29 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
             return false;
         }
 
-        // Añadir solicitud de amistad
-        ArrayList<String> amigosExistentes = this.solicitudesAmistad.get(nombreAmigo);
-        if(amigosExistentes == null){
-            // Crear un ArrayList nuevo
-            amigosExistentes = new ArrayList<>();
+        // Comprobar que el amigo deseado existe en la BD
+        if(this.usuariosRegistrados.get(nombreAmigo) == null){
+            return false;
         }
-        amigosExistentes.add(usuario);
-        this.solicitudesAmistad.put(nombreAmigo, amigosExistentes);
+
+        // Comprobar que la persona no es ya tu amiga
+        if(this.amigos.get(usuario).contains(nombreAmigo)){
+            return false;
+        }
+
+        // Comprobar que no hay ya una solicitud emitida ya
+        ArrayList<String> solicitudesExistentes = this.solicitudesAmistad.get(nombreAmigo);
+        // Se non existe ningunha solicitud previa, inicializar a lista
+        if (solicitudesExistentes == null) {
+            solicitudesExistentes = new ArrayList<>();
+        }   
+        if(solicitudesExistentes.contains(usuario)){
+            return false;
+        }
+
+        // Añadir solicitud de amistad
+        solicitudesExistentes.add(usuario);
+        this.solicitudesAmistad.put(nombreAmigo, solicitudesExistentes);
 
         return true;
     }
@@ -371,13 +387,17 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         }
 
         // Comprobar que existe la solicitud de amistad
-        if(!this.solicitudesAmistad.get(usuario).contains(nombreAmigo)){
+        if(this.solicitudesAmistad.get(usuario) == null){
+            return false;
+        }
+        if(!solicitudesAmistad.get(usuario).contains(nombreAmigo)){
             return false;
         }
 
         // Responder a la solicitud de amistad
         if(aceptar){
             amigos.get(usuario).add(nombreAmigo);
+            amigos.get(nombreAmigo).add(usuario);
 
             // Si el amigo está en línea, les mandas sus respectivos peers
             Interfaces nuevoAmigo = clientesEnLinea.get(nombreAmigo);
@@ -386,6 +406,11 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
                 propioUsuario.cliente().addUsuarioEnLinea(nuevoAmigo.peer());
                 nuevoAmigo.cliente().addUsuarioEnLinea(propioUsuario.peer());
             }
+
+            // Como la amistad es recíproca, si hay invitación en otro sentido se puede eliminar ya
+            if(solicitudesAmistad.get(nombreAmigo) != null){
+                this.solicitudesAmistad.get(nombreAmigo).remove(usuario);
+            }
         }
 
         // Eliminar la solicitud de la lista de solicitudes pendientes, en todos los casos
@@ -393,6 +418,17 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
             return false;
         }
 
+        return true;
+    }
+
+    public boolean changePassword(String usuario, String contrasinalAntigo, String contrasinalNovo) throws RemoteException {
+        // Comprobar se o usuario está rexistrado e o contrasinal antigo é correcto
+        if(!authenticate(usuario, contrasinalAntigo)){
+            return false; // O usuario non está rexistrado ou o contrasinal antigo é incorrecto
+        }
+
+        // Cambiar o contrasinal
+        usuariosRegistrados.put(usuario, contrasinalNovo);
         return true;
     }
 
