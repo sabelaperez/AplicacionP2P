@@ -13,6 +13,7 @@ public class ImplInterfaceCliente extends UnicastRemoteObject implements Interfa
     private HashMap<String, InterfacePeer> peersEnLinea;
     private BiConsumer<String, InterfacePeer> newUserHandler;
     private Consumer<String> disconnectedUserHandler;
+    private Consumer<String> friendRequestHandler;
 
     public ImplInterfaceCliente() throws RemoteException {
         super();
@@ -42,8 +43,16 @@ public class ImplInterfaceCliente extends UnicastRemoteObject implements Interfa
             Platform.runLater(() -> disconnectedUserHandler.accept(nombre));
         }
 
-        // TODO
         return true;
+    }
+
+    public void notifyFriendRequest(String requesterName) throws RemoteException {
+        System.out.println("Nueva solicitud de amistad de: " + requesterName);
+        
+        // If UI is available, update it
+        if (friendRequestHandler != null) {
+            Platform.runLater(() -> friendRequestHandler.accept(requesterName));
+        }
     }
 
     public Set<String> getPeerNames() throws RemoteException{
@@ -60,5 +69,9 @@ public class ImplInterfaceCliente extends UnicastRemoteObject implements Interfa
 
     public void setUserRemovalHandler(Consumer<String> handler) {
         this.disconnectedUserHandler = handler;
+    }
+
+    public void setFriendRequestHandler(Consumer<String> handler) {
+        this.friendRequestHandler = handler;
     }
 }

@@ -9,4 +9,5 @@ public interface InterfaceCliente extends Remote {
     public boolean addUsuarioEnLinea(InterfacePeer usuario) throws RemoteException;
     public boolean removeUsuarioEnLinea(String nombre) throws RemoteException;
     public Set<String> getPeerNames() throws RemoteException;
+    public void notifyFriendRequest(String requesterName) throws RemoteException;
 }

@@ -363,6 +363,16 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         solicitudesExistentes.add(usuario);
         this.solicitudesAmistad.put(nombreAmigo, solicitudesExistentes);
 
+        // Notificar al usuario si está en línea
+        Interfaces interfazAmigo = this.clientesEnLinea.get(nombreAmigo);
+        if(interfazAmigo != null){
+            try {
+                interfazAmigo.cliente().notifyFriendRequest(usuario);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+
         return true;
     }
 

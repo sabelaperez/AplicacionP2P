@@ -12,6 +12,8 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
+import javafx.stage.Modality;
+import javafx.stage.Window;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -165,6 +167,11 @@ public class ClienteUI extends Application {
             cliente.setUserRemovalHandler((amigo) -> {
                 removeUserFromList(amigo);
             });
+
+            // Set handler to automatically receive friend requests
+            cliente.setFriendRequestHandler((requesterName) -> {
+                handleNewFriendRequest(requesterName);
+            });
             
             boolean success;
             if (isRegister) {
@@ -246,6 +253,14 @@ public class ClienteUI extends Application {
         
         leftPanel.getChildren().addAll(friendsHeader, userListView, requestsHeader, pendingRequestsListView);
 
+        // Settings button
+        Button settingsButton = new Button("Configuración");
+        settingsButton.setStyle("-fx-background-color: #424242; -fx-text-fill: white; -fx-font-size: 12px;");
+        settingsButton.setOnAction(e -> showSettingsWindow());
+
+        leftPanel.getChildren().add(settingsButton);
+        VBox.setMargin(settingsButton, new Insets(20, 0, 0, 0));        
+
         // Center - Chat area
         VBox centerPanel = new VBox(10);
         centerPanel.setPadding(new Insets(10));
@@ -309,6 +324,69 @@ public class ClienteUI extends Application {
         });
     }
 
+    private void showSettingsWindow() {
+        Stage settingsStage = new Stage();
+        settingsStage.setTitle("Configuración");
+        settingsStage.initModality(Modality.APPLICATION_MODAL);
+        
+        VBox mainLayout = new VBox(20);
+        mainLayout.setPadding(new Insets(30));
+        mainLayout.setAlignment(Pos.CENTER);
+        mainLayout.setStyle("-fx-background-color: #2c2c2c;");
+        
+        Label titleLabel = new Label("Configuración de Cuenta");
+        titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;");
+        
+        // Botón para cambiar contraseña
+        Button changePasswordButton = new Button("Cambiar Contraseña");
+        changePasswordButton.setPrefWidth(250);
+        changePasswordButton.setStyle("-fx-background-color: #1976d2; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10px;");
+        changePasswordButton.setOnAction(e -> {
+            showChangePasswordWindow();
+        });
+        
+        // Botón para eliminar cuenta
+        Button deleteAccountButton = new Button("Eliminar Cuenta");
+        deleteAccountButton.setPrefWidth(250);
+        deleteAccountButton.setStyle("-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10px;");
+        deleteAccountButton.setOnAction(e -> {
+            showDeleteAccountWindow();
+            settingsStage.close();
+        });
+        
+        // Botón para cerrar sesión
+        Button logoutButton = new Button("Cerrar Sesión");
+        logoutButton.setPrefWidth(250);
+        logoutButton.setStyle("-fx-background-color: #f57c00; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10px;");
+        logoutButton.setOnAction(e -> {
+            handleLogout();
+            settingsStage.close();
+        });
+        
+        // Botón para cancelar
+        Button cancelButton = new Button("Cancelar");
+        cancelButton.setPrefWidth(250);
+        cancelButton.setStyle("-fx-background-color: #616161; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10px;");
+        cancelButton.setOnAction(e -> settingsStage.close());
+        
+        mainLayout.getChildren().addAll(
+            titleLabel,
+            new Label("Usuario: " + nombre) {{
+                setStyle("-fx-text-fill: #bbbbbb; -fx-font-size: 14px;");
+            }},
+            new Separator(),
+            changePasswordButton,
+            deleteAccountButton,
+            logoutButton,
+            new Separator(),
+            cancelButton
+        );
+        
+        Scene scene = new Scene(mainLayout, 400, 450);
+        settingsStage.setScene(scene);
+        settingsStage.showAndWait();
+    }
+
     private void loadPendingRequests() {
         new Thread(() -> {
             try {
@@ -327,6 +405,208 @@ public class ClienteUI extends Application {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    private void showChangePasswordWindow() {
+        Stage changePassStage = new Stage();
+        changePassStage.setTitle("Cambiar Contraseña");
+        changePassStage.initModality(Modality.APPLICATION_MODAL);
+        
+        VBox layout = new VBox(15);
+        layout.setPadding(new Insets(30));
+        layout.setAlignment(Pos.CENTER);
+        layout.setStyle("-fx-background-color: #2c2c2c;");
+        
+        Label titleLabel = new Label("Cambiar Contraseña");
+        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;");
+        
+        PasswordField oldPasswordField = new PasswordField();
+        oldPasswordField.setPromptText("Contraseña actual");
+        oldPasswordField.setPrefWidth(300);
+        oldPasswordField.setStyle("-fx-background-color: #424242; -fx-text-fill: white; -fx-prompt-text-fill: #888;");
+        
+        PasswordField newPasswordField = new PasswordField();
+        newPasswordField.setPromptText("Nueva contraseña");
+        newPasswordField.setPrefWidth(300);
+        newPasswordField.setStyle("-fx-background-color: #424242; -fx-text-fill: white; -fx-prompt-text-fill: #888;");
+        
+        PasswordField confirmPasswordField = new PasswordField();
+        confirmPasswordField.setPromptText("Confirmar nueva contraseña");
+        confirmPasswordField.setPrefWidth(300);
+        confirmPasswordField.setStyle("-fx-background-color: #424242; -fx-text-fill: white; -fx-prompt-text-fill: #888;");
+        
+        Label statusLabel = new Label();
+        statusLabel.setStyle("-fx-text-fill: #f44336; -fx-font-size: 12px;");
+        
+        Button changeButton = new Button("Cambiar Contraseña");
+        changeButton.setPrefWidth(150);
+        changeButton.setStyle("-fx-background-color: #1976d2; -fx-text-fill: white;");
+        changeButton.setOnAction(e -> {
+            String oldPass = oldPasswordField.getText();
+            String newPass = newPasswordField.getText();
+            String confirmPass = confirmPasswordField.getText();
+            
+            if (oldPass.isEmpty() || newPass.isEmpty() || confirmPass.isEmpty()) {
+                statusLabel.setText("Por favor, completa todos los campos");
+                return;
+            }
+            
+            if (!newPass.equals(confirmPass)) {
+                statusLabel.setText("Las contraseñas nuevas no coinciden");
+                return;
+            }
+            
+            if (!oldPass.equals(contrasinal)) {
+                statusLabel.setText("La contraseña actual es incorrecta");
+                return;
+            }
+            
+            try {
+                boolean success = servidor.changePassword(nombre, oldPass, newPass);
+                if (success) {
+                    contrasinal = newPass;
+                    showInfoAlert("Éxito", "Contraseña cambiada correctamente");
+                    changePassStage.close();
+                } else {
+                    statusLabel.setText("Error al cambiar la contraseña");
+                }
+            } catch (RemoteException ex) {
+                showAlert("Error", "Error de conexión con el servidor");
+                ex.printStackTrace();
+            }
+        });
+        
+        Button cancelButton = new Button("Cancelar");
+        cancelButton.setPrefWidth(150);
+        cancelButton.setStyle("-fx-background-color: #616161; -fx-text-fill: white;");
+        cancelButton.setOnAction(e -> changePassStage.close());
+        
+        HBox buttonBox = new HBox(10, changeButton, cancelButton);
+        buttonBox.setAlignment(Pos.CENTER);
+        
+        layout.getChildren().addAll(
+            titleLabel,
+            oldPasswordField,
+            newPasswordField,
+            confirmPasswordField,
+            statusLabel,
+            buttonBox
+        );
+        
+        Scene scene = new Scene(layout, 400, 350);
+        changePassStage.setScene(scene);
+        changePassStage.showAndWait();
+    }
+
+    private void showDeleteAccountWindow() {
+        Stage deleteStage = new Stage();
+        deleteStage.setTitle("Eliminar Cuenta");
+        deleteStage.initModality(Modality.APPLICATION_MODAL);
+        
+        VBox layout = new VBox(20);
+        layout.setPadding(new Insets(30));
+        layout.setAlignment(Pos.CENTER);
+        layout.setStyle("-fx-background-color: #2c2c2c;");
+        
+        Label warningLabel = new Label("⚠ ADVERTENCIA ⚠");
+        warningLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #f44336;");
+        
+        Label infoLabel = new Label("Esta acción eliminará permanentemente tu cuenta.\nNo se puede deshacer.");
+        infoLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px; -fx-text-alignment: center;");
+        infoLabel.setWrapText(true);
+        
+        Label confirmLabel = new Label("Escribe tu contraseña para confirmar:");
+        confirmLabel.setStyle("-fx-text-fill: white; -fx-font-size: 12px;");
+        
+        PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText("Contraseña");
+        passwordField.setPrefWidth(300);
+        passwordField.setStyle("-fx-background-color: #424242; -fx-text-fill: white; -fx-prompt-text-fill: #888;");
+        
+        Label statusLabel = new Label();
+        statusLabel.setStyle("-fx-text-fill: #f44336; -fx-font-size: 12px;");
+        
+        Button deleteButton = new Button("Eliminar Cuenta");
+        deleteButton.setPrefWidth(150);
+        deleteButton.setStyle("-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-font-weight: bold;");
+        deleteButton.setOnAction(e -> {
+            String password = passwordField.getText();
+            
+            if (password.isEmpty()) {
+                statusLabel.setText("Por favor, introduce tu contraseña");
+                return;
+            }
+            
+            if (!password.equals(contrasinal)) {
+                statusLabel.setText("Contraseña incorrecta");
+                return;
+            }
+            
+            try {
+                boolean success = servidor.deleteUser(nombre, password);
+                if (success) {
+                    showInfoAlert("Cuenta eliminada", "Tu cuenta ha sido eliminada correctamente");
+                    deleteStage.close();
+                    // Volver a la pantalla de login
+                    start(new Stage());
+                } else {
+                    statusLabel.setText("Error al eliminar la cuenta");
+                }
+            } catch (RemoteException ex) {
+                showAlert("Error", "Error de conexión con el servidor");
+                ex.printStackTrace();
+            }
+        });
+        
+        Button cancelButton = new Button("Cancelar");
+        cancelButton.setPrefWidth(150);
+        cancelButton.setStyle("-fx-background-color: #616161; -fx-text-fill: white;");
+        cancelButton.setOnAction(e -> deleteStage.close());
+        
+        HBox buttonBox = new HBox(10, deleteButton, cancelButton);
+        buttonBox.setAlignment(Pos.CENTER);
+        
+        layout.getChildren().addAll(
+            warningLabel,
+            infoLabel,
+            confirmLabel,
+            passwordField,
+            statusLabel,
+            buttonBox
+        );
+        
+        Scene scene = new Scene(layout, 400, 300);
+        deleteStage.setScene(scene);
+        deleteStage.showAndWait();
+    }
+
+    private void handleLogout() {
+        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmAlert.setTitle("Cerrar Sesión");
+        confirmAlert.setHeaderText("¿Estás seguro que deseas cerrar sesión?");
+        confirmAlert.setContentText("Tendrás que volver a iniciar sesión para usar la aplicación.");
+        
+        confirmAlert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                try {
+                    servidor.logOut(nombre, contrasinal);
+                    // Volver a la pantalla de login
+                    Stage currentStage = (Stage) Stage.getWindows().stream()
+                        .filter(Window::isShowing)
+                        .findFirst()
+                        .orElse(null);
+                    
+                    if (currentStage != null) {
+                        currentStage.close();
+                    }
+                    
+                    start(new Stage());
+                } catch (RemoteException e) {
+                    showAlert("Error", "Error al cerrar sesión: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     private void refreshPendingRequests() {
@@ -378,7 +658,7 @@ public class ClienteUI extends Application {
         
         // Check if already friends
         if (userListItems.containsKey(targetUsername)) {
-            showInfoAlert("Información", "Xa es amigo de " + targetUsername);
+            showInfoAlert("Información", "Ya eres amigo de " + targetUsername);
             return;
         }
         
@@ -439,10 +719,10 @@ public class ClienteUI extends Application {
                     if (success) {
                         // Remove from pending requests
                         removePendingRequest(requesterName);
-                        
-                        showInfoAlert("Éxito", "Agora es amigo de " + requesterName);
+
+                        showInfoAlert("Éxito", "Ahora eres amigo de " + requesterName);
                     } else {
-                        showInfoAlert("Error", "Non se puido aceptar a solicitude");
+                        showInfoAlert("Error", "No se pudo aceptar la solicitud");
                     }
                 });
             } catch (RemoteException e) {
@@ -493,6 +773,20 @@ public class ClienteUI extends Application {
         } else {
             pendingCountLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #666;");
         }
+    }
+
+    private void handleNewFriendRequest(String requesterName) {
+        // Check if request already exists
+        if (pendingRequestItems.containsKey(requesterName)) {
+            return;
+        }
+        
+        // Add to pending requests
+        addPendingRequest(requesterName);
+        updatePendingCount();
+        
+        // Optionally show a notification
+        showInfoAlert("Nueva Solicitud", requesterName + " quiere ser tu amigo!");
     }
 
     private void switchToChat(String username) {
