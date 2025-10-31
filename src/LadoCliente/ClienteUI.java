@@ -45,7 +45,7 @@ public class ClienteUI extends Application {
     private String currentChatUser = null;
     
     // Store chat history for each user
-    private Map<String, VBox> chatHistories = new HashMap<>();
+    private Map<String, ArrayList<ChatMessage>> chatHistories = new HashMap<>();
     
     // Store notification indicators for each user
     private Map<String, Circle> userNotificationIcons = new HashMap<>();
@@ -790,6 +790,10 @@ public class ClienteUI extends Application {
     }
 
     private void switchToChat(String username) {
+        if (username.equals(currentChatUser)){
+            return;
+        }
+
         currentChatUser = username;
         currentChatLabel.setText("Chat with: " + username);
         messageField.setDisable(false);
@@ -799,9 +803,16 @@ public class ClienteUI extends Application {
         chatArea.getChildren().clear();
         
         // Load chat history for this user
-        VBox history = chatHistories.get(username);
+        ArrayList<ChatMessage> history = chatHistories.get(username);
         if (history != null) {
-            chatArea.getChildren().addAll(history.getChildren());
+            for(ChatMessage message : history){
+                if(message.isDisconection()){
+                    chatArea.getChildren().add(createDisconnectLabel(message.message()));
+                }
+                else{
+                    chatArea.getChildren().add(createMessageLabel(message.message(), message.isSent()));
+                }
+            }
         }
         
         // Clear notification icon for this user
@@ -840,8 +851,8 @@ public class ClienteUI extends Application {
         
         // Initialize chat history for this user if not exists
         if (!chatHistories.containsKey(username)) {
-            chatHistories.put(username, new VBox(5));
-            chatHistories.get(username).setPadding(new Insets(10));
+            chatHistories.put(username, new ArrayList<ChatMessage>());
+            // chatHistories.get(username).setPadding(new Insets(10));
         }
         
         Platform.runLater(() -> {
@@ -861,16 +872,16 @@ public class ClienteUI extends Application {
 
     private void removeUserFromList(String username) {
         // Add disconnect message to history (preserves it)
-        Label disconnectLabel = createDisconnectLabel(username);
-        VBox history = chatHistories.get(username);
+        String text = "--- " + username + " disconnected ---";
+        ArrayList<ChatMessage> history = chatHistories.get(username);
         if (history != null) {
-            history.getChildren().add(disconnectLabel);
+            history.add(new ChatMessage(text, false, true));
         }
         
         // Check if we're currently chatting with the disconnected user
         if (username.equals(currentChatUser)) {            
             Platform.runLater(() -> {
-                chatArea.getChildren().add(disconnectLabel);
+                chatArea.getChildren().add(createDisconnectLabel(text));
                 messageField.setDisable(true);
                 sendBtn.setDisable(true);
                 currentChatLabel.setText("Chat with: " + username + " (Offline)");
@@ -890,8 +901,8 @@ public class ClienteUI extends Application {
         }
     }
 
-    private Label createDisconnectLabel(String username) {
-        Label disconnectLabel = new Label("--- " + username + " disconnected ---");
+    private Label createDisconnectLabel(String message) {
+        Label disconnectLabel = new Label(message);
         disconnectLabel.setWrapText(true);
         disconnectLabel.setMaxWidth(400);
         disconnectLabel.setPadding(new Insets(5, 10, 5, 10));
@@ -945,15 +956,14 @@ public class ClienteUI extends Application {
     }
 
     private void addMessageToHistory(String username, String message, boolean isSent) {
-        VBox history = chatHistories.get(username);
+        ArrayList<ChatMessage> history = chatHistories.get(username);
         if (history == null) {
-            history = new VBox(5);
-            history.setPadding(new Insets(10));
+            history = new ArrayList<ChatMessage>();
             chatHistories.put(username, history);
         }
         
         Label msgLabel = createMessageLabel(message, isSent);
-        history.getChildren().add(msgLabel);
+        history.add(new ChatMessage(message, isSent, false));
     }
 
     private void addMessageToCurrentChat(String message, boolean isSent) {
