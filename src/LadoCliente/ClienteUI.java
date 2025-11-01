@@ -43,6 +43,16 @@ public class ClienteUI extends Application {
     private Label currentChatLabel;
     private Label pendingCountLabel;
     private String currentChatUser = null;
+
+    private static final String BACKGROUND_COLOR = "#2c2c2c";
+    private static final String SECONDARY_BACKGROUND = "#424242";
+    private static final String BUTTON_COLOR = "#616161";
+    private static final String PRIMARY_COLOR = "#1976d2";
+    private static final String DANGER_COLOR = "#d32f2f";
+    private static final String SUCCESS_COLOR = "#4CAF50";
+    private static final String WARNING_COLOR = "#f57c00";
+    private static final String TEXT_COLOR = "white";
+    private static final String SECONDARY_TEXT = "#bbbbbb";
     
     // Store chat history for each user
     private Map<String, ArrayList<ChatMessage>> chatHistories = new HashMap<>();
@@ -71,36 +81,47 @@ public class ClienteUI extends Application {
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(25, 25, 25, 25));
+        grid.setStyle("-fx-background-color: #2c2c2c;");
 
         Label titleLabel = new Label("P2P Messaging App");
-        titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+        titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;");
         grid.add(titleLabel, 0, 0, 2, 1);
 
         Label ipLabel = new Label("IP do Servidor:");
+        ipLabel.setStyle("-fx-text-fill: white;");
         grid.add(ipLabel, 0, 1);
         TextField ipField = new TextField("localhost");
+        ipField.setStyle("-fx-background-color: #424242; -fx-text-fill: white;");
         grid.add(ipField, 1, 1);
 
         Label portLabel = new Label("Porto do Servidor:");
+        portLabel.setStyle("-fx-text-fill: white;");
         grid.add(portLabel, 0, 2);
         TextField portField = new TextField("1099");
+        portField.setStyle("-fx-background-color: #424242; -fx-text-fill: white;");
         grid.add(portField, 1, 2);
 
         Label userLabel = new Label("Nome de usuario:");
+        userLabel.setStyle("-fx-text-fill: white;");
         grid.add(userLabel, 0, 3);
         TextField userField = new TextField();
+        userField.setStyle("-fx-background-color: #424242; -fx-text-fill: white;");
         grid.add(userField, 1, 3);
 
         Label passLabel = new Label("Contrasinal:");
+        passLabel.setStyle("-fx-text-fill: white;");
         grid.add(passLabel, 0, 4);
         PasswordField passField = new PasswordField();
+        passField.setStyle("-fx-background-color: #424242; -fx-text-fill: white;");
         grid.add(passField, 1, 4);
 
         Button loginBtn = new Button("Iniciar Sesión");
         Button registerBtn = new Button("Rexistrarse");
-        HBox btnBox = new HBox(10);
+        HBox btnBox = new HBox(20);
         btnBox.setAlignment(Pos.CENTER);
         btnBox.getChildren().addAll(loginBtn, registerBtn);
+        loginBtn.setStyle("-fx-background-color: #616161; -fx-text-fill: white;");
+        registerBtn.setStyle("-fx-background-color: #616161; -fx-text-fill: white;");
         grid.add(btnBox, 0, 5, 2, 1);
 
         Label statusLabel = new Label();
@@ -210,38 +231,42 @@ public class ClienteUI extends Application {
     private void showMainUI() {        
         BorderPane mainLayout = new BorderPane();
         mainLayout.setPadding(new Insets(10));
+        mainLayout.setStyle("-fx-background-color: #2c2c2c;");
 
         // Left side - User list and friend requests
         VBox leftPanel = new VBox(10);
         leftPanel.setPrefWidth(250);
         leftPanel.setPadding(new Insets(10));
-        leftPanel.setStyle("-fx-background-color: #f0f0f0;");
+        leftPanel.setStyle("-fx-background-color: #2c2c2c;");
 
         // Friends section
         HBox friendsHeader = new HBox(10);
         friendsHeader.setAlignment(Pos.CENTER_LEFT);
+        friendsHeader.setStyle("-fx-background-color: #2c2c2c;");
         Label friendsLabel = new Label("Amigos");
-        friendsLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        friendsLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;");
         Button addFriendBtn = new Button("+");
-        addFriendBtn.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+        addFriendBtn.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: #616161; -fx-text-fill: white;");
         addFriendBtn.setTooltip(new Tooltip("Enviar solicitud de amizade"));
         addFriendBtn.setOnAction(e -> showAddFriendDialog());
         friendsHeader.getChildren().addAll(friendsLabel, addFriendBtn);
         
         userListView = new ListView<>();
         userListView.setPrefHeight(300);
+        userListView.setStyle("-fx-background-color: " + SECONDARY_BACKGROUND + "; -fx-control-inner-background: " + SECONDARY_BACKGROUND + ";");
         
         // Pending requests section
         HBox requestsHeader = new HBox(10);
         requestsHeader.setAlignment(Pos.CENTER_LEFT);
+        requestsHeader.setStyle("-fx-background-color: #2c2c2c;");
         Label requestsLabel = new Label("Solicitudes Pendentes");
-        requestsLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+        requestsLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: white;");
         pendingCountLabel = new Label("(0)");
         pendingCountLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #666;");
 
         // Refresh button
         Button refreshRequestsBtn = new Button("⟳");
-        refreshRequestsBtn.setStyle("-fx-font-size: 12px;");
+        refreshRequestsBtn.setStyle("-fx-font-size: 12px; -fx-background-color: #616161; -fx-text-fill: white;");
         refreshRequestsBtn.setTooltip(new Tooltip("Refrescar solicitudes"));
         refreshRequestsBtn.setOnAction(e -> refreshPendingRequests());
 
@@ -250,12 +275,13 @@ public class ClienteUI extends Application {
         pendingRequestsListView = new ListView<>();
         pendingRequestsListView.setPrefHeight(150);
         pendingRequestsListView.setSelectionModel(null);
+        pendingRequestsListView.setStyle("-fx-background-color: " + SECONDARY_BACKGROUND + "; -fx-control-inner-background: " + SECONDARY_BACKGROUND + ";");
         
         leftPanel.getChildren().addAll(friendsHeader, userListView, requestsHeader, pendingRequestsListView);
 
         // Settings button
         Button settingsButton = new Button("Configuración");
-        settingsButton.setStyle("-fx-background-color: #424242; -fx-text-fill: white; -fx-font-size: 12px;");
+        settingsButton.setStyle("-fx-background-color: #616161; -fx-text-fill: white; -fx-font-size: 12px;");
         settingsButton.setOnAction(e -> showSettingsWindow());
 
         leftPanel.getChildren().add(settingsButton);
@@ -264,24 +290,34 @@ public class ClienteUI extends Application {
         // Center - Chat area
         VBox centerPanel = new VBox(10);
         centerPanel.setPadding(new Insets(10));
+        centerPanel.setStyle("-fx-background-color: #2c2c2c;");
 
         currentChatLabel = new Label("Select a friend to chat");
-        currentChatLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        currentChatLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;");
 
         ScrollPane chatScrollPane = new ScrollPane();
         chatArea = new VBox(5);
         chatArea.setPadding(new Insets(10));
+        chatArea.setStyle("-fx-background-color: " + BACKGROUND_COLOR + ";");
         chatScrollPane.setContent(chatArea);
         chatScrollPane.setFitToWidth(true);
         chatScrollPane.setPrefHeight(400);
-        chatScrollPane.setStyle("-fx-background-color: white;");
+        // Cambiar el color de fondo del viewport del ScrollPane
+        chatScrollPane.setStyle(
+            "-fx-background: " + BACKGROUND_COLOR + "; " +
+            "-fx-background-color: " + BACKGROUND_COLOR + "; " +
+            "-fx-border-color: " + SECONDARY_BACKGROUND + "; " +
+            "-fx-border-radius: 10;"
+        );
 
         HBox messageBox = new HBox(10);
         messageField = new TextField();
         messageField.setPrefWidth(400);
         messageField.setDisable(true);
+        messageField.setStyle("-fx-background-color: #424242; -fx-text-fill: white;");
         
         sendBtn = new Button("Send");
+        sendBtn.setStyle("-fx-background-color: #616161; -fx-text-fill: white;");
         sendBtn.setDisable(true);
         sendBtn.setOnAction(e -> sendMessage());
         
@@ -592,12 +628,110 @@ public class ClienteUI extends Application {
         deleteStage.showAndWait();
     }
 
+    // Funcións de estilo
+    private void styleDialog(Dialog<?> dialog) {
+        DialogPane dialogPane = dialog.getDialogPane();
+        
+        // Aplicar estilos CSS directamente al DialogPane
+        dialogPane.setStyle(
+            "-fx-background-color: " + BACKGROUND_COLOR + ";" +
+            "-fx-border-color: " + SECONDARY_BACKGROUND + ";" +
+            "-fx-text-fill: " + TEXT_COLOR + ";" +
+            "-fx-border-width: 1px;"
+        );
+        
+        // Estilizar el header panel específicamente
+        dialogPane.lookupAll(".header-panel").forEach(node -> {
+            node.setStyle("-fx-background-color: " + BACKGROUND_COLOR + "; -fx-text-fill: " + TEXT_COLOR + ";");
+        });
+        
+        // Estilizar el content area
+        dialogPane.lookupAll(".content").forEach(node -> {
+            node.setStyle("-fx-background-color: " + BACKGROUND_COLOR + "; -fx-text-fill: " + TEXT_COLOR + ";");
+        });
+        
+        // Style all labels
+        dialogPane.lookupAll(".label").forEach(node -> {
+            if (node instanceof Label) {
+                ((Label) node).setStyle("-fx-text-fill: " + TEXT_COLOR + ";");
+            }
+        });
+        
+        // Style header text specifically
+        Label headerLabel = (Label) dialogPane.lookup(".header-panel .label");
+        if (headerLabel != null) {
+            headerLabel.setStyle("-fx-text-fill: " + TEXT_COLOR + "; -fx-font-size: 16px; -fx-font-weight: bold;");
+        }
+        
+        // Style content text
+        Label contentLabel = (Label) dialogPane.lookup(".content.label");
+        if (contentLabel != null) {
+            contentLabel.setStyle("-fx-text-fill: " + TEXT_COLOR + ";");
+        }
+        
+        // Style buttons
+        dialogPane.lookupAll(".button").forEach(node -> {
+            if (node instanceof Button) {
+                Button btn = (Button) node;
+                if (btn.getText().contains("OK") || btn.getText().contains("Aceptar")) {
+                    btn.setStyle("-fx-background-color: " + PRIMARY_COLOR + "; -fx-text-fill: " + TEXT_COLOR + ";");
+                } else {
+                    btn.setStyle("-fx-background-color: " + BUTTON_COLOR + "; -fx-text-fill: " + TEXT_COLOR + ";");
+                }
+            }
+        });
+        
+        // Style text fields if any
+        dialogPane.lookupAll(".text-field").forEach(node -> {
+            if (node instanceof TextField) {
+                ((TextField) node).setStyle("-fx-background-color: " + SECONDARY_BACKGROUND + "; -fx-text-fill: " + TEXT_COLOR + "; -fx-prompt-text-fill: #888;");
+            }
+        });
+        
+        // Style password fields if any
+        dialogPane.lookupAll(".password-field").forEach(node -> {
+            if (node instanceof PasswordField) {
+                ((PasswordField) node).setStyle("-fx-background-color: " + SECONDARY_BACKGROUND + "; -fx-text-fill: " + TEXT_COLOR + "; -fx-prompt-text-fill: #888;");
+            }
+        });
+    }
+
+    private void styleAlert(Alert alert) {
+        styleDialog(alert);
+        
+        // Additional styling based on alert type
+        DialogPane dialogPane = alert.getDialogPane();
+        switch (alert.getAlertType()) {
+            case ERROR:
+                dialogPane.lookupAll(".button").forEach(node -> {
+                    if (node instanceof Button) {
+                        ((Button) node).setStyle("-fx-background-color: " + DANGER_COLOR + "; -fx-text-fill: " + TEXT_COLOR + ";");
+                    }
+                });
+                break;
+            case CONFIRMATION:
+                // Keep default styling from styleDialog
+                break;
+            case INFORMATION:
+                dialogPane.lookupAll(".button").forEach(node -> {
+                    if (node instanceof Button) {
+                        ((Button) node).setStyle("-fx-background-color: " + SUCCESS_COLOR + "; -fx-text-fill: " + TEXT_COLOR + ";");
+                    }
+                });
+                break;
+            default:
+                break;
+        }
+    }
+
     private void handleLogout() {
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
         confirmAlert.setTitle("Cerrar Sesión");
         confirmAlert.setHeaderText("¿Estás seguro que deseas cerrar sesión?");
         confirmAlert.setContentText("Tendrás que volver a iniciar sesión para usar la aplicación.");
         
+        styleAlert(confirmAlert);
+
         confirmAlert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 try {
@@ -653,6 +787,8 @@ public class ClienteUI extends Application {
         dialog.setTitle("Engadir Amigo");
         dialog.setHeaderText("Enviar solicitude de amizade");
         dialog.setContentText("Nome de usuario:");
+
+        styleDialog(dialog);
         
         Optional<String> result = dialog.showAndWait();
         result.ifPresent(username -> {
@@ -698,21 +834,21 @@ public class ClienteUI extends Application {
         HBox requestItem = new HBox(10);
         requestItem.setAlignment(Pos.CENTER_LEFT);
         requestItem.setPadding(new Insets(5));
-        requestItem.setStyle("-fx-background-color: #FFF9E6; -fx-background-radius: 5;");
+        requestItem.setStyle("-fx-background-color: " + SECONDARY_BACKGROUND + "; -fx-background-radius: 5;");
         
         Label nameLabel = new Label(requesterName);
-        nameLabel.setStyle("-fx-font-size: 12px;");
+        nameLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: " + TEXT_COLOR + ";");
         
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         
-        Button acceptBtn = new Button("✓");
-        acceptBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;");
+        Button acceptBtn = new Button("Aceptar");
+        acceptBtn.setStyle("-fx-background-color: " + SUCCESS_COLOR + "; -fx-text-fill: white; -fx-font-weight: bold;");
         acceptBtn.setTooltip(new Tooltip("Aceptar"));
         acceptBtn.setOnAction(e -> acceptFriendRequest(requesterName));
         
-        Button rejectBtn = new Button("✗");
-        rejectBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold;");
+        Button rejectBtn = new Button("Rechazar");
+        rejectBtn.setStyle("-fx-background-color: " + DANGER_COLOR + "; -fx-text-fill: white; -fx-font-weight: bold;");
         rejectBtn.setTooltip(new Tooltip("Rexeitar"));
         rejectBtn.setOnAction(e -> rejectFriendRequest(requesterName));
         
@@ -840,20 +976,21 @@ public class ClienteUI extends Application {
         HBox userItem = new HBox(10);
         userItem.setAlignment(Pos.CENTER_LEFT);
         userItem.setPadding(new Insets(5));
+        userItem.setStyle("-fx-background-color: " + SECONDARY_BACKGROUND + "; -fx-background-radius: 5;");
         
         Label usernameLabel = new Label(username);
-        usernameLabel.setStyle("-fx-font-size: 14px;");
+        usernameLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: " + TEXT_COLOR + ";");
         
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         
         // Message notification icon (red circle)
-        Circle messageNotification = new Circle(5, Color.RED);
+        Circle messageNotification = new Circle(5, Color.web(DANGER_COLOR));
         messageNotification.setVisible(false);
         
         // New user notification icon (badge)
         Label newUserBadge = new Label("NOVO");
-        newUserBadge.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-size: 9px; -fx-padding: 2 4; -fx-background-radius: 3;");
+        newUserBadge.setStyle("-fx-background-color: " + SUCCESS_COLOR + "; -fx-text-fill: white; -fx-font-size: 9px; -fx-padding: 2 4; -fx-background-radius: 3;");
         newUserBadge.setVisible(isNewUser);
         
         userItem.getChildren().addAll(usernameLabel, spacer, messageNotification, newUserBadge);
@@ -934,7 +1071,7 @@ public class ClienteUI extends Application {
         disconnectLabel.setWrapText(true);
         disconnectLabel.setMaxWidth(400);
         disconnectLabel.setPadding(new Insets(5, 10, 5, 10));
-        disconnectLabel.setStyle("-fx-background-color: #FFE4B5; -fx-background-radius: 10; -fx-text-fill: #8B4513; -fx-font-style: italic;");
+        disconnectLabel.setStyle("-fx-background-color: " + SECONDARY_BACKGROUND + "; -fx-background-radius: 10; -fx-text-fill: " + WARNING_COLOR + "; -fx-font-style: italic;");
         disconnectLabel.setAlignment(Pos.CENTER);
         return disconnectLabel;
     }
@@ -1007,10 +1144,10 @@ public class ClienteUI extends Application {
         msgLabel.setPadding(new Insets(5, 10, 5, 10));
         
         if (isSent) {
-            msgLabel.setStyle("-fx-background-color: #DCF8C6; -fx-background-radius: 10;");
+            msgLabel.setStyle("-fx-background-color: #1976d2; -fx-background-radius: 10; -fx-text-fill: white;");
             msgLabel.setAlignment(Pos.CENTER_RIGHT);
         } else {
-            msgLabel.setStyle("-fx-background-color: #FFFFFF; -fx-border-color: #E0E0E0; -fx-background-radius: 10;");
+            msgLabel.setStyle("-fx-background-color: " + SECONDARY_BACKGROUND + "; -fx-border-color: #555; -fx-background-radius: 10; -fx-text-fill: white;");
             msgLabel.setAlignment(Pos.CENTER_LEFT);
         }
         
@@ -1036,6 +1173,7 @@ public class ClienteUI extends Application {
         alert.setTitle(title);
         alert.setHeaderText(title);
         alert.setContentText(content);
+        styleAlert(alert);
         alert.showAndWait();
     }
 
@@ -1044,6 +1182,7 @@ public class ClienteUI extends Application {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(content);
+        styleAlert(alert);
         alert.show();
     }
 
