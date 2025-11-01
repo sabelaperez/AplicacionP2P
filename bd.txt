@@ -2,19 +2,14 @@ USER PASSWD
 Marta asd
 Sabela aaaaa
 Diego diego
-Lucas lucas
 Carlos bonjour
 
 USER NUMBER
-Marta 3
+Marta 2
 Diego
-Lucas
-Lucas
+Carlos
 Sabela 0
-Diego 3
+Diego 0
+Carlos 2
 Marta
-Sabela
-Juan
-Lucas 1
-Marta
-Carlos 0
+Diego

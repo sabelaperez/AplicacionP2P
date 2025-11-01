@@ -258,7 +258,6 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
 
         usuariosRegistrados.remove(usuario);
         clientesEnLinea.remove(usuario);
-        amigos.remove(usuario);
 
         // Notificar al resto de amigos de la baja
         for(String amigo : this.amigos.get(usuario)){
@@ -267,6 +266,8 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
                 interfacesAmigo.cliente().removeUsuarioEnLinea(usuario);
             }
         }
+        // Eliminar los amigos una vez notificados
+        amigos.remove(usuario);
 
         // Considerar eliminar as solicitudes de amizade relacionadas
 

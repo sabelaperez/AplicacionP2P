@@ -545,10 +545,22 @@ public class ClienteUI extends Application {
             try {
                 boolean success = servidor.deleteUser(nombre, password);
                 if (success) {
-                    showInfoAlert("Cuenta eliminada", "Tu cuenta ha sido eliminada correctamente");
                     deleteStage.close();
+
+                    // Eliminar la pantalla principal
+                    Stage currentStage = (Stage) Stage.getWindows().stream()
+                        .filter(Window::isShowing)
+                        .findFirst()
+                        .orElse(null);
+                    
+                    if (currentStage != null) {
+                        currentStage.close();
+                    }
+
                     // Volver a la pantalla de login
-                    start(new Stage());
+                    showLoginScreen();
+                    showInfoAlert("Cuenta eliminada", "Tu cuenta ha sido eliminada correctamente");
+                    
                 } else {
                     statusLabel.setText("Error al eliminar la cuenta");
                 }
@@ -600,7 +612,7 @@ public class ClienteUI extends Application {
                         currentStage.close();
                     }
                     
-                    start(new Stage());
+                    showLoginScreen();
                 } catch (RemoteException e) {
                     showAlert("Error", "Error al cerrar sesión: " + e.getMessage());
                     e.printStackTrace();
@@ -854,6 +866,22 @@ public class ClienteUI extends Application {
             chatHistories.put(username, new ArrayList<ChatMessage>());
             // chatHistories.get(username).setPadding(new Insets(10));
         }
+        else{
+            // Creamos un mensaje de reconexión y lo añadimos al historial 
+            String text = "--- " + username + " reconnected ---";
+            ArrayList<ChatMessage> history = chatHistories.get(username);
+            if (history != null) {
+                history.add(new ChatMessage(text, false, true));
+            }
+            // Si el chat ya existe y está seleccionado, actualizamos su estado
+            if (username.equals(currentChatUser)) {
+                chatArea.getChildren().add(createDisconnectLabel(text));
+                
+                messageField.setDisable(false);
+                sendBtn.setDisable(false);
+                currentChatLabel.setText("Chat with: " + username);
+            }
+        }
         
         Platform.runLater(() -> {
             userListView.getItems().add(userItem);
@@ -962,7 +990,6 @@ public class ClienteUI extends Application {
             chatHistories.put(username, history);
         }
         
-        Label msgLabel = createMessageLabel(message, isSent);
         history.add(new ChatMessage(message, isSent, false));
     }
 
