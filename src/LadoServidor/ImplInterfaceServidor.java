@@ -258,7 +258,6 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
 
         usuariosRegistrados.remove(usuario);
         clientesEnLinea.remove(usuario);
-        amigos.remove(usuario);
 
         // Notificar al resto de amigos de la baja
         for(String amigo : this.amigos.get(usuario)){
@@ -266,6 +265,13 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
             if(interfacesAmigo != null){
                 interfacesAmigo.cliente().removeUsuarioEnLinea(usuario);
             }
+        }
+        // Eliminar los amigos una vez notificados
+        amigos.remove(usuario);
+
+        // Eliminar al usuario eliminado de todas las amistades
+        for(ArrayList<String> amigosUsuario : this.amigos.values()){
+            amigosUsuario.remove(usuario);
         }
 
         // Considerar eliminar as solicitudes de amizade relacionadas
@@ -362,6 +368,16 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         // Añadir solicitud de amistad
         solicitudesExistentes.add(usuario);
         this.solicitudesAmistad.put(nombreAmigo, solicitudesExistentes);
+
+        // Notificar al usuario si está en línea
+        Interfaces interfazAmigo = this.clientesEnLinea.get(nombreAmigo);
+        if(interfazAmigo != null){
+            try {
+                interfazAmigo.cliente().notifyFriendRequest(usuario);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
 
         return true;
     }
