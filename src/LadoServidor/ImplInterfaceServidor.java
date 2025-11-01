@@ -269,6 +269,11 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         // Eliminar los amigos una vez notificados
         amigos.remove(usuario);
 
+        // Eliminar al usuario eliminado de todas las amistades
+        for(ArrayList<String> amigosUsuario : this.amigos.values()){
+            amigosUsuario.remove(usuario);
+        }
+
         // Considerar eliminar as solicitudes de amizade relacionadas
 
         return true;
