@@ -296,6 +296,11 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
             return false;
         }
 
+        // Comprobar que no hay una sesión ya iniciada
+        if(clientesEnLinea.get(nombreUsuario) != null){
+            return false;
+        }
+
         // Añadir al nuevo usuario a la lista de usuarios en línea
         
         Interfaces datosUsuario = new Interfaces(usuario, peer);

@@ -214,7 +214,7 @@ public class ClienteUI extends Application {
                 if (success) {
                     showMainUI();
                 } else {
-                    statusLabel.setText("Invalid credentials!");
+                    statusLabel.setText("You are already logged in or the credentials are invalid!");
                 }
             }
         }

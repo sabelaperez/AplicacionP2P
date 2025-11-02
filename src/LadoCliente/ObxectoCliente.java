@@ -93,7 +93,7 @@ public class ObxectoCliente {
                         // Iniciar sesión
                         logged = servidor.logIn(cliente, peer, contrasinal); 
                         if(!logged){
-                            System.out.println("No se ha podido iniciar sesión. Nombre de usuario o contraseña incorrectos.");
+                            System.out.println("No se ha podido iniciar sesión. Ya tienes una sesión iniciada o tus datos son incorrectos.");
                         }
                     } else {
                         System.out.println("Respuesta no válida");
