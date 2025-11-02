@@ -182,7 +182,7 @@ public class ClienteUI extends Application {
             });
             
             // Set handler to automatically add newly connected friends
-            cliente.setUserAdditionHandler((amigo, interfazAmigo) -> {
+            cliente.setUserAdditionHandler((amigo) -> {
                 addUserToList(amigo, true);
             });
 

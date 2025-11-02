@@ -137,8 +137,6 @@ public class ObxectoCliente {
                             } else {
                                 System.out.println("No hay otros usuarios en línea.");
                             }
-                        } catch (RemoteException exception) {
-                            System.out.println("Error en la obtención de los peers: " + exception.getMessage());
                         } catch (NullPointerException npe) {
                             System.out.println("Error: cliente no inicializado correctamente.");
                         }
