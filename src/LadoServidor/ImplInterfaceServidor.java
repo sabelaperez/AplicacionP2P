@@ -272,7 +272,13 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
             amigosUsuario.remove(usuario);
         }
 
-        // Considerar eliminar as solicitudes de amizade relacionadas
+        // Eliminar las solicitudes de amistad del usuario
+        // Eliminar solicitudes donde el usuario es solicitante
+        for (ArrayList<String> solicitudes : solicitudesAmistad.values()) {
+            solicitudes.remove(usuario);
+        }
+        // Eliminar solicitudes donde el usuario es solicitado
+        solicitudesAmistad.remove(usuario);
 
         return true;
     }
