@@ -141,6 +141,8 @@ public class ClienteUI extends Application {
 
         Scene scene = new Scene(grid, 400, 350);
         primaryStage.setScene(scene);
+        primaryStage.setMinWidth(400);
+        primaryStage.setMinHeight(350);
         primaryStage.setWidth(400);
         primaryStage.setHeight(350);
         primaryStage.centerOnScreen();
@@ -346,6 +348,8 @@ public class ClienteUI extends Application {
         Scene scene = new Scene(mainLayout, 900, 600);
         primaryStage.setScene(scene);
         primaryStage.setTitle("P2P Chat - " + nombre);
+        primaryStage.setMinWidth(450);
+        primaryStage.setMinHeight(300);
         primaryStage.setWidth(900);
         primaryStage.setHeight(600);
         primaryStage.centerOnScreen();
@@ -1095,7 +1099,6 @@ public class ClienteUI extends Application {
     private Label createDisconnectLabel(String message) {
         Label disconnectLabel = new Label(message);
         disconnectLabel.setWrapText(true);
-        disconnectLabel.setMaxWidth(400);
         disconnectLabel.setPadding(new Insets(5, 10, 5, 10));
         disconnectLabel.setStyle("-fx-background-color: " + SECONDARY_BACKGROUND + "; -fx-background-radius: 10; -fx-text-fill: " + WARNING_COLOR + "; -fx-font-style: italic;");
         disconnectLabel.setAlignment(Pos.CENTER);
@@ -1157,27 +1160,28 @@ public class ClienteUI extends Application {
     }
 
     private void addMessageToCurrentChat(String message, boolean isSent) {
-        Label msgLabel = createMessageLabel(message, isSent);
+        HBox msgLabel = createMessageLabel(message, isSent);
         Platform.runLater(() -> {
             chatArea.getChildren().add(msgLabel);
         });
     }
 
-    private Label createMessageLabel(String message, boolean isSent) {
+    private HBox createMessageLabel(String message, boolean isSent) {
         Label msgLabel = new Label(message);
         msgLabel.setWrapText(true);
-        msgLabel.setMaxWidth(400);
         msgLabel.setPadding(new Insets(5, 10, 5, 10));
         
         if (isSent) {
             msgLabel.setStyle("-fx-background-color: #1976d2; -fx-background-radius: 10; -fx-text-fill: white;");
-            msgLabel.setAlignment(Pos.CENTER_RIGHT);
+            HBox container = new HBox(msgLabel);
+            container.setAlignment(Pos.CENTER_RIGHT);
+            return container;
         } else {
-            msgLabel.setStyle("-fx-background-color: " + SECONDARY_BACKGROUND + "; -fx-border-color: #555; -fx-background-radius: 10; -fx-text-fill: white;");
-            msgLabel.setAlignment(Pos.CENTER_LEFT);
+            msgLabel.setStyle("-fx-background-color: " + SECONDARY_BACKGROUND + "; -fx-background-radius: 10; -fx-text-fill: white;");
+            HBox container = new HBox(msgLabel);
+            container.setAlignment(Pos.CENTER_LEFT);
+            return container;
         }
-        
-        return msgLabel;
     }
 
     private void showNotificationIcon(String username) {

@@ -295,7 +295,7 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         Interfaces datosUsuario = new Interfaces(usuario, peer);
         clientesEnLinea.put(nombreUsuario, datosUsuario);
 
-        System.out.println("Se ha registrado un nuevo usuario en el servidor");
+        System.out.println("Un usuario a iniciado sesión en el servidor");
         
         for(String amigo : this.amigos.get(nombreUsuario)){
             Interfaces interfacesAmigo = clientesEnLinea.get(amigo);
