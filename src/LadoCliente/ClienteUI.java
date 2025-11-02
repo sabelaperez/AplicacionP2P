@@ -147,6 +147,12 @@ public class ClienteUI extends Application {
         primaryStage.setHeight(350);
         primaryStage.centerOnScreen();
         primaryStage.show();
+
+        // Handle window close
+        primaryStage.setOnCloseRequest(e -> {
+            Platform.exit();
+            System.exit(0);
+        });
     }
 
     private void handleLogin(String ip, String port, String username, 
