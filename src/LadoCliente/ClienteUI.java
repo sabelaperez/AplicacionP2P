@@ -1,5 +1,15 @@
 package LadoCliente;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.rmi.Naming;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import LadoServidor.InterfaceServidor;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
@@ -14,17 +24,6 @@ import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import javafx.stage.Modality;
 import javafx.stage.Window;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.rmi.Naming;
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import LadoServidor.InterfaceServidor;
 
 public class ClienteUI extends Application {
     
@@ -142,6 +141,9 @@ public class ClienteUI extends Application {
 
         Scene scene = new Scene(grid, 400, 350);
         primaryStage.setScene(scene);
+        primaryStage.setWidth(400);
+        primaryStage.setHeight(350);
+        primaryStage.centerOnScreen();
         primaryStage.show();
     }
 
@@ -312,7 +314,7 @@ public class ClienteUI extends Application {
 
         HBox messageBox = new HBox(10);
         messageField = new TextField();
-        messageField.setPrefWidth(400);
+        HBox.setHgrow(messageField, Priority.ALWAYS);
         messageField.setDisable(true);
         messageField.setStyle("-fx-background-color: #424242; -fx-text-fill: white;");
         
@@ -344,6 +346,9 @@ public class ClienteUI extends Application {
         Scene scene = new Scene(mainLayout, 900, 600);
         primaryStage.setScene(scene);
         primaryStage.setTitle("P2P Chat - " + nombre);
+        primaryStage.setWidth(900);
+        primaryStage.setHeight(600);
+        primaryStage.centerOnScreen();
 
         // Load pending friend requests from server
         loadPendingRequests();
@@ -420,6 +425,11 @@ public class ClienteUI extends Application {
         
         Scene scene = new Scene(mainLayout, 400, 450);
         settingsStage.setScene(scene);
+        settingsStage.setMinWidth(400);
+        settingsStage.setMinHeight(450);
+        settingsStage.setWidth(400);
+        settingsStage.setHeight(450);
+        settingsStage.centerOnScreen();
         settingsStage.showAndWait();
     }
 
@@ -531,6 +541,11 @@ public class ClienteUI extends Application {
         
         Scene scene = new Scene(layout, 400, 350);
         changePassStage.setScene(scene);
+        changePassStage.setMinWidth(400);
+        changePassStage.setMinHeight(350);
+        changePassStage.setWidth(400);
+        changePassStage.setHeight(350);
+        changePassStage.centerOnScreen();
         changePassStage.showAndWait();
     }
 
@@ -625,6 +640,11 @@ public class ClienteUI extends Application {
         
         Scene scene = new Scene(layout, 400, 300);
         deleteStage.setScene(scene);
+        deleteStage.setMinWidth(400);
+        deleteStage.setMinHeight(300);
+        deleteStage.setWidth(400);
+        deleteStage.setHeight(300);
+        deleteStage.centerOnScreen();
         deleteStage.showAndWait();
     }
 
@@ -658,10 +678,16 @@ public class ClienteUI extends Application {
         });
         
         // Style header text specifically
-        Label headerLabel = (Label) dialogPane.lookup(".header-panel .label");
-        if (headerLabel != null) {
-            headerLabel.setStyle("-fx-text-fill: " + TEXT_COLOR + "; -fx-font-size: 16px; -fx-font-weight: bold;");
-        }
+        Platform.runLater(() -> {                    
+            Label headerLabel = (Label) dialogPane.lookup(".header-panel .label");
+            if (headerLabel != null) {
+                headerLabel.setStyle(
+                    "-fx-text-fill: " + TEXT_COLOR + " !important; " +
+                    "-fx-font-size: 16px; " +
+                    "-fx-font-weight: bold;"
+                );
+            }
+        });
         
         // Style content text
         Label contentLabel = (Label) dialogPane.lookup(".content.label");
