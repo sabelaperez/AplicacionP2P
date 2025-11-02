@@ -159,11 +159,11 @@ public class ClienteUI extends Application {
                             String password, boolean isRegister, Label statusLabel) {
         // Validate inputs
         if (username == null || username.trim().isEmpty()) {
-            statusLabel.setText("Username cannot be empty!");
+            statusLabel.setText("O usuario non pode estar baleiro!");
             return;
         }
         if (password == null || password.trim().isEmpty()) {
-            statusLabel.setText("Password cannot be empty!");
+            statusLabel.setText("O contrasinal non pode estar baleiro!");
             return;
         }
         
@@ -210,31 +210,32 @@ public class ClienteUI extends Application {
                 if (success) {
                     // Automatically logs into the interface
                     servidor.logIn(cliente, peer, contrasinal);
-                    statusLabel.setText("Registered successfully!");
+                    statusLabel.setText("Usuario rexistrado correctamente!");
                     showMainUI();
                 } else {
-                    statusLabel.setText("Username already exists!");
+                    statusLabel.setText("O usuario xa existe!");
                 }
             } else {
                 success = servidor.logIn(cliente, peer, contrasinal);
                 if (success) {
                     showMainUI();
                 } else {
-                    statusLabel.setText("You are already logged in or the credentials are invalid!");
+                    statusLabel.setText("Xa tes unha sesión iniciada ou os datos son incorrectos!");
                 }
             }
         }
         catch (UnknownHostException e) {
-            showAlert("La dirección IP es inválida", e.getMessage());
+            showAlert("A dirección IP é inválida", e.getMessage());
             e.printStackTrace();
         }
         catch (NumberFormatException e){
-            showAlert("El puerto introducido no es válido", e.getMessage());
+            showAlert("O porto introducido non é válido", e.getMessage());
             e.printStackTrace();
         }
         catch (Exception e) {
-            showAlert("Error de conexión", e.getMessage());
+            showAlert("Erro de conexión", e.getMessage());
             e.printStackTrace();
+            System.out.println(e.getClass());
         }
     }
 
@@ -302,7 +303,7 @@ public class ClienteUI extends Application {
         centerPanel.setPadding(new Insets(10));
         centerPanel.setStyle("-fx-background-color: #2c2c2c;");
 
-        currentChatLabel = new Label("Select a friend to chat");
+        currentChatLabel = new Label("Elixa un amigo para chatear");
         currentChatLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;");
 
         ScrollPane chatScrollPane = new ScrollPane();
@@ -326,7 +327,7 @@ public class ClienteUI extends Application {
         messageField.setDisable(true);
         messageField.setStyle("-fx-background-color: #424242; -fx-text-fill: white;");
         
-        sendBtn = new Button("Send");
+        sendBtn = new Button("Enviar");
         sendBtn.setStyle("-fx-background-color: #616161; -fx-text-fill: white;");
         sendBtn.setDisable(true);
         sendBtn.setOnAction(e -> sendMessage());
@@ -385,11 +386,11 @@ public class ClienteUI extends Application {
         mainLayout.setAlignment(Pos.CENTER);
         mainLayout.setStyle("-fx-background-color: #2c2c2c;");
         
-        Label titleLabel = new Label("Configuración de Cuenta");
+        Label titleLabel = new Label("Configuración da Conta");
         titleLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;");
         
         // Botón para cambiar contraseña
-        Button changePasswordButton = new Button("Cambiar Contraseña");
+        Button changePasswordButton = new Button("Cambiar Contrasinal");
         changePasswordButton.setPrefWidth(250);
         changePasswordButton.setStyle("-fx-background-color: #1976d2; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10px;");
         changePasswordButton.setOnAction(e -> {
@@ -397,7 +398,7 @@ public class ClienteUI extends Application {
         });
         
         // Botón para eliminar cuenta
-        Button deleteAccountButton = new Button("Eliminar Cuenta");
+        Button deleteAccountButton = new Button("Eliminar Contal");
         deleteAccountButton.setPrefWidth(250);
         deleteAccountButton.setStyle("-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10px;");
         deleteAccountButton.setOnAction(e -> {
@@ -406,7 +407,7 @@ public class ClienteUI extends Application {
         });
         
         // Botón para cerrar sesión
-        Button logoutButton = new Button("Cerrar Sesión");
+        Button logoutButton = new Button("Pechar Sesión");
         logoutButton.setPrefWidth(250);
         logoutButton.setStyle("-fx-background-color: #f57c00; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10px;");
         logoutButton.setOnAction(e -> {
@@ -457,7 +458,7 @@ public class ClienteUI extends Application {
                     });
                 }
             } catch (RemoteException e) {
-                System.err.println("Error loading friend requests: " + e.getMessage());
+                System.err.println("Error ao cargar as solicitudes de amizade: " + e.getMessage());
                 e.printStackTrace();
             }
         }).start();
@@ -465,7 +466,7 @@ public class ClienteUI extends Application {
 
     private void showChangePasswordWindow() {
         Stage changePassStage = new Stage();
-        changePassStage.setTitle("Cambiar Contraseña");
+        changePassStage.setTitle("Cambiar Contrasinal");
         changePassStage.initModality(Modality.APPLICATION_MODAL);
         
         VBox layout = new VBox(15);
@@ -473,28 +474,28 @@ public class ClienteUI extends Application {
         layout.setAlignment(Pos.CENTER);
         layout.setStyle("-fx-background-color: #2c2c2c;");
         
-        Label titleLabel = new Label("Cambiar Contraseña");
+        Label titleLabel = new Label("Cambiar Contrasinal");
         titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;");
         
         PasswordField oldPasswordField = new PasswordField();
-        oldPasswordField.setPromptText("Contraseña actual");
+        oldPasswordField.setPromptText("Contrasinal actual");
         oldPasswordField.setPrefWidth(300);
         oldPasswordField.setStyle("-fx-background-color: #424242; -fx-text-fill: white; -fx-prompt-text-fill: #888;");
         
         PasswordField newPasswordField = new PasswordField();
-        newPasswordField.setPromptText("Nueva contraseña");
+        newPasswordField.setPromptText("Novo Contrasinal");
         newPasswordField.setPrefWidth(300);
         newPasswordField.setStyle("-fx-background-color: #424242; -fx-text-fill: white; -fx-prompt-text-fill: #888;");
         
         PasswordField confirmPasswordField = new PasswordField();
-        confirmPasswordField.setPromptText("Confirmar nueva contraseña");
+        confirmPasswordField.setPromptText("Confirmar novo contrasinal");
         confirmPasswordField.setPrefWidth(300);
         confirmPasswordField.setStyle("-fx-background-color: #424242; -fx-text-fill: white; -fx-prompt-text-fill: #888;");
         
         Label statusLabel = new Label();
         statusLabel.setStyle("-fx-text-fill: #f44336; -fx-font-size: 12px;");
         
-        Button changeButton = new Button("Cambiar Contraseña");
+        Button changeButton = new Button("Cambiar Contrasinal");
         changeButton.setPrefWidth(150);
         changeButton.setStyle("-fx-background-color: #1976d2; -fx-text-fill: white;");
         changeButton.setOnAction(e -> {
@@ -503,17 +504,17 @@ public class ClienteUI extends Application {
             String confirmPass = confirmPasswordField.getText();
             
             if (oldPass.isEmpty() || newPass.isEmpty() || confirmPass.isEmpty()) {
-                statusLabel.setText("Por favor, completa todos los campos");
+                statusLabel.setText("Por favor, completa todos os campos");
                 return;
             }
             
             if (!newPass.equals(confirmPass)) {
-                statusLabel.setText("Las contraseñas nuevas no coinciden");
+                statusLabel.setText("Os contrasinais novos non coinciden");
                 return;
             }
             
             if (!oldPass.equals(contrasinal)) {
-                statusLabel.setText("La contraseña actual es incorrecta");
+                statusLabel.setText("O contrasinal actual é incorrecto");
                 return;
             }
             
@@ -521,13 +522,13 @@ public class ClienteUI extends Application {
                 boolean success = servidor.changePassword(nombre, oldPass, newPass);
                 if (success) {
                     contrasinal = newPass;
-                    showInfoAlert("Éxito", "Contraseña cambiada correctamente");
+                    showInfoAlert("Éxito", "Contrasinal cambiada correctamente");
                     changePassStage.close();
                 } else {
-                    statusLabel.setText("Error al cambiar la contraseña");
+                    statusLabel.setText("Erro ao cambiar o contrasinal");
                 }
             } catch (RemoteException ex) {
-                showAlert("Error", "Error de conexión con el servidor");
+                showAlert("Error", "Erro de conexión co servidor");
                 ex.printStackTrace();
             }
         });
@@ -561,7 +562,7 @@ public class ClienteUI extends Application {
 
     private void showDeleteAccountWindow() {
         Stage deleteStage = new Stage();
-        deleteStage.setTitle("Eliminar Cuenta");
+        deleteStage.setTitle("Eliminar Conta");
         deleteStage.initModality(Modality.APPLICATION_MODAL);
         
         VBox layout = new VBox(20);
@@ -572,34 +573,34 @@ public class ClienteUI extends Application {
         Label warningLabel = new Label("⚠ ADVERTENCIA ⚠");
         warningLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #f44336;");
         
-        Label infoLabel = new Label("Esta acción eliminará permanentemente tu cuenta.\nNo se puede deshacer.");
+        Label infoLabel = new Label("Esta acción eliminará permanentemente a túa conta.\nNon se pode desfacer.");
         infoLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px; -fx-text-alignment: center;");
         infoLabel.setWrapText(true);
         
-        Label confirmLabel = new Label("Escribe tu contraseña para confirmar:");
+        Label confirmLabel = new Label("Escribe o teu contrasinal para confirmar:");
         confirmLabel.setStyle("-fx-text-fill: white; -fx-font-size: 12px;");
         
         PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Contraseña");
+        passwordField.setPromptText("Contrasinal");
         passwordField.setPrefWidth(300);
         passwordField.setStyle("-fx-background-color: #424242; -fx-text-fill: white; -fx-prompt-text-fill: #888;");
         
         Label statusLabel = new Label();
         statusLabel.setStyle("-fx-text-fill: #f44336; -fx-font-size: 12px;");
         
-        Button deleteButton = new Button("Eliminar Cuenta");
+        Button deleteButton = new Button("Eliminar Conta");
         deleteButton.setPrefWidth(150);
         deleteButton.setStyle("-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-font-weight: bold;");
         deleteButton.setOnAction(e -> {
             String password = passwordField.getText();
             
             if (password.isEmpty()) {
-                statusLabel.setText("Por favor, introduce tu contraseña");
+                statusLabel.setText("Por favor, introduce o teu contrasinal");
                 return;
             }
             
             if (!password.equals(contrasinal)) {
-                statusLabel.setText("Contraseña incorrecta");
+                statusLabel.setText("Contrasinal incorrecto");
                 return;
             }
             
@@ -620,13 +621,13 @@ public class ClienteUI extends Application {
 
                     // Volver a la pantalla de login
                     showLoginScreen();
-                    showInfoAlert("Cuenta eliminada", "Tu cuenta ha sido eliminada correctamente");
+                    showInfoAlert("Conta eliminada", "A túa conta foi eliminada correctamente");
                     
                 } else {
-                    statusLabel.setText("Error al eliminar la cuenta");
+                    statusLabel.setText("Erro ao eliminar a cuenta");
                 }
             } catch (RemoteException ex) {
-                showAlert("Error", "Error de conexión con el servidor");
+                showAlert("Error", "Erro de conexión co servidor");
                 ex.printStackTrace();
             }
         });
@@ -762,9 +763,9 @@ public class ClienteUI extends Application {
 
     private void handleLogout() {
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmAlert.setTitle("Cerrar Sesión");
-        confirmAlert.setHeaderText("¿Estás seguro que deseas cerrar sesión?");
-        confirmAlert.setContentText("Tendrás que volver a iniciar sesión para usar la aplicación.");
+        confirmAlert.setTitle("Pechar Sesión");
+        confirmAlert.setHeaderText("¿Estás seguro de que desexas pechar sesión?");
+        confirmAlert.setContentText("Deberás volver a iniciar sesión para usar a aplicación.");
         
         styleAlert(confirmAlert);
 
@@ -784,7 +785,7 @@ public class ClienteUI extends Application {
                     
                     showLoginScreen();
                 } catch (RemoteException e) {
-                    showAlert("Error", "Error al cerrar sesión: " + e.getMessage());
+                    showAlert("Error", "Erro ao pechar sesión: " + e.getMessage());
                     e.printStackTrace();
                 }
             }
@@ -842,7 +843,7 @@ public class ClienteUI extends Application {
         
         // Check if already friends
         if (userListItems.containsKey(targetUsername)) {
-            showInfoAlert("Información", "Ya eres amigo de " + targetUsername);
+            showInfoAlert("Información", "Xa eres amigo de " + targetUsername);
             return;
         }
         
@@ -883,7 +884,7 @@ public class ClienteUI extends Application {
         acceptBtn.setTooltip(new Tooltip("Aceptar"));
         acceptBtn.setOnAction(e -> acceptFriendRequest(requesterName));
         
-        Button rejectBtn = new Button("Rechazar");
+        Button rejectBtn = new Button("Rexeitar");
         rejectBtn.setStyle("-fx-background-color: " + DANGER_COLOR + "; -fx-text-fill: white; -fx-font-weight: bold;");
         rejectBtn.setTooltip(new Tooltip("Rexeitar"));
         rejectBtn.setOnAction(e -> rejectFriendRequest(requesterName));
@@ -906,7 +907,7 @@ public class ClienteUI extends Application {
 
                         showInfoAlert("Éxito", "Ahora eres amigo de " + requesterName);
                     } else {
-                        showInfoAlert("Error", "No se pudo aceptar la solicitud");
+                        showInfoAlert("Error", "Non se puido aceptar a solicitude");
                     }
                 });
             } catch (RemoteException e) {
@@ -970,7 +971,7 @@ public class ClienteUI extends Application {
         updatePendingCount();
         
         // Optionally show a notification
-        showInfoAlert("Nueva Solicitud", requesterName + " quiere ser tu amigo!");
+        showInfoAlert("Nova Solicitude", requesterName + " quere ser o teu amigo!");
     }
 
     private void switchToChat(String username) {
@@ -979,7 +980,7 @@ public class ClienteUI extends Application {
         }
 
         currentChatUser = username;
-        currentChatLabel.setText("Chat with: " + username);
+        currentChatLabel.setText("Chatea con: " + username);
         messageField.setDisable(false);
         sendBtn.setDisable(false);
         
@@ -1041,7 +1042,7 @@ public class ClienteUI extends Application {
         }
         else{
             // Creamos un mensaje de reconexión y lo añadimos al historial 
-            String text = "--- " + username + " reconnected ---";
+            String text = "--- " + username + " reconectouse ---";
             ArrayList<ChatMessage> history = chatHistories.get(username);
             if (history != null) {
                 history.add(new ChatMessage(text, false, true));
@@ -1052,7 +1053,7 @@ public class ClienteUI extends Application {
                 
                 messageField.setDisable(false);
                 sendBtn.setDisable(false);
-                currentChatLabel.setText("Chat with: " + username);
+                currentChatLabel.setText("Chatea con: " + username);
             }
         }
         
@@ -1073,7 +1074,7 @@ public class ClienteUI extends Application {
 
     private void removeUserFromList(String username) {
         // Add disconnect message to history (preserves it)
-        String text = "--- " + username + " disconnected ---";
+        String text = "--- " + username + " desconectouse ---";
         ArrayList<ChatMessage> history = chatHistories.get(username);
         if (history != null) {
             history.add(new ChatMessage(text, false, true));
@@ -1085,7 +1086,7 @@ public class ClienteUI extends Application {
                 chatArea.getChildren().add(createDisconnectLabel(text));
                 messageField.setDisable(true);
                 sendBtn.setDisable(true);
-                currentChatLabel.setText("Chat with: " + username + " (Offline)");
+                currentChatLabel.setText("Chatea con: " + username + " (Desconectado)");
             });
         }
         
@@ -1102,13 +1103,17 @@ public class ClienteUI extends Application {
         }
     }
 
-    private Label createDisconnectLabel(String message) {
+    private HBox createDisconnectLabel(String message) {
         Label disconnectLabel = new Label(message);
         disconnectLabel.setWrapText(true);
         disconnectLabel.setPadding(new Insets(5, 10, 5, 10));
         disconnectLabel.setStyle("-fx-background-color: " + SECONDARY_BACKGROUND + "; -fx-background-radius: 10; -fx-text-fill: " + WARNING_COLOR + "; -fx-font-style: italic;");
         disconnectLabel.setAlignment(Pos.CENTER);
-        return disconnectLabel;
+
+        HBox container = new HBox(disconnectLabel);
+        container.setAlignment(Pos.CENTER);
+        HBox.setHgrow(container, Priority.ALWAYS);
+        return container;
     }
 
     private String getUsernameFromListItem(HBox item) {
@@ -1142,16 +1147,16 @@ public class ClienteUI extends Application {
             if (targetPeer != null) {
                 targetPeer.receiveMessage(message, nombre);
                 
-                String formattedMessage = "You: " + message;
+                String formattedMessage = "Ti: " + message;
                 addMessageToHistory(currentChatUser, formattedMessage, true);
                 addMessageToCurrentChat(formattedMessage, true);
                 
                 messageField.clear();
             } else {
-                showAlert("Error", "User not found!");
+                showAlert("Error", "O usuario non foi atopado!");
             }
         } catch (RemoteException e) {
-            showAlert("Error", "Failed to send message: " + e.getMessage());
+            showAlert("Error", "Erro ao enviar a mensaxe: " + e.getMessage());
         }
     }
 

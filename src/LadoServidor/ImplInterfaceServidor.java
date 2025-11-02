@@ -332,6 +332,7 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         // Eliminar al usuario de la lista de usuarios en línea
         Interfaces usuarioEliminado = clientesEnLinea.remove(usuario);
         if(usuarioEliminado == null){
+            System.out.println("Erro al desconectarse del servidor");
             return false;
         }
 
