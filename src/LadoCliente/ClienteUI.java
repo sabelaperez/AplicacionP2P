@@ -398,7 +398,7 @@ public class ClienteUI extends Application {
         });
         
         // Botón para eliminar cuenta
-        Button deleteAccountButton = new Button("Eliminar Contal");
+        Button deleteAccountButton = new Button("Eliminar Conta");
         deleteAccountButton.setPrefWidth(250);
         deleteAccountButton.setStyle("-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10px;");
         deleteAccountButton.setOnAction(e -> {
@@ -609,19 +609,9 @@ public class ClienteUI extends Application {
                 if (success) {
                     deleteStage.close();
 
-                    // Eliminar la pantalla principal
-                    Stage currentStage = (Stage) Stage.getWindows().stream()
-                        .filter(Window::isShowing)
-                        .findFirst()
-                        .orElse(null);
-                    
-                    if (currentStage != null) {
-                        currentStage.close();
-                    }
-
-                    // Volver a la pantalla de login
-                    showLoginScreen();
-                    showInfoAlert("Conta eliminada", "A túa conta foi eliminada correctamente");
+                    // Cerrar todas las ventanas y terminar el programa
+                    Platform.exit();
+                    System.exit(0);
                     
                 } else {
                     statusLabel.setText("Erro ao eliminar a cuenta");
@@ -773,17 +763,10 @@ public class ClienteUI extends Application {
             if (response == ButtonType.OK) {
                 try {
                     servidor.logOut(nombre, contrasinal);
-                    // Volver a la pantalla de login
-                    Stage currentStage = (Stage) Stage.getWindows().stream()
-                        .filter(Window::isShowing)
-                        .findFirst()
-                        .orElse(null);
                     
-                    if (currentStage != null) {
-                        currentStage.close();
-                    }
-                    
-                    showLoginScreen();
+                    // Cerrar todas las ventanas
+                    Platform.exit();
+                    System.exit(0);
                 } catch (RemoteException e) {
                     showAlert("Error", "Erro ao pechar sesión: " + e.getMessage());
                     e.printStackTrace();
