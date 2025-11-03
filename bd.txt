@@ -1,19 +1,13 @@
 USER PASSWD
 Marta asd
-Sabela aaaa
 Diego diego
 Carlos bonjour
 
 USER NUMBER
-Marta 3
+Marta 2
 Carlos
-Sabela
 Diego
-Sabela 2
-Marta
-Diego
-Diego 2
-Sabela
+Diego 1
 Marta
 Carlos 1
 Marta

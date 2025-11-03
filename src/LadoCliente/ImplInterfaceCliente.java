@@ -4,14 +4,13 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import javafx.application.Platform;
 
 public class ImplInterfaceCliente extends UnicastRemoteObject implements InterfaceCliente {
     private HashMap<String, InterfacePeer> peersEnLinea;
-    private BiConsumer<String, InterfacePeer> newUserHandler;
+    private Consumer<String> newUserHandler;
     private Consumer<String> disconnectedUserHandler;
     private Consumer<String> friendRequestHandler;
 
@@ -20,42 +19,37 @@ public class ImplInterfaceCliente extends UnicastRemoteObject implements Interfa
         peersEnLinea = new HashMap<>();
     }
 
-    public boolean addUsuarioEnLinea(InterfacePeer usuario) throws RemoteException{
+    public void addUsuarioEnLinea(InterfacePeer usuario) throws RemoteException{
         String nombre = usuario.getName();
         System.out.println(nombre + " está en linea");
         peersEnLinea.put(usuario.getName(), usuario);
 
-        // If UI is available, update it
+        // Si hay UI, actualizarla
         if (newUserHandler != null) {
-            Platform.runLater(() -> newUserHandler.accept(nombre, usuario));
+            Platform.runLater(() -> newUserHandler.accept(nombre));
         }
-
-        // TODO
-        return true;
     }
 
-    public boolean removeUsuarioEnLinea(String nombre) throws RemoteException{
+    public void removeUsuarioEnLinea(String nombre) throws RemoteException{
         System.out.println(nombre + " se ha desconectado");
         peersEnLinea.remove(nombre);
 
-        // If UI is available, update it
+        // Si hay UI, actualizarla
         if (disconnectedUserHandler != null) {
             Platform.runLater(() -> disconnectedUserHandler.accept(nombre));
         }
-
-        return true;
     }
 
     public void notifyFriendRequest(String requesterName) throws RemoteException {
         System.out.println("Nueva solicitud de amistad de: " + requesterName);
         
-        // If UI is available, update it
+        // Si hay UI, actualizarla
         if (friendRequestHandler != null) {
             Platform.runLater(() -> friendRequestHandler.accept(requesterName));
         }
     }
 
-    public Set<String> getPeerNames() throws RemoteException{
+    public Set<String> getPeerNames(){
         return this.peersEnLinea.keySet();
     }
 
@@ -63,7 +57,7 @@ public class ImplInterfaceCliente extends UnicastRemoteObject implements Interfa
         return peersEnLinea.get(nombre);
     }
 
-    public void setUserAdditionHandler(BiConsumer<String, InterfacePeer> handler) {
+    public void setUserAdditionHandler(Consumer<String> handler) {
         this.newUserHandler = handler;
     }
 

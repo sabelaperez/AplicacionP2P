@@ -9,10 +9,10 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import LadoCliente.InterfaceCliente;
 import LadoCliente.InterfacePeer;
@@ -20,23 +20,21 @@ import LadoCliente.InterfacePeer;
 
 
 public class ImplInterfaceServidor extends UnicastRemoteObject implements InterfaceServidor {
-    private HashMap<String, Interfaces> clientesEnLinea;
-    private HashMap<String, String> usuariosRegistrados;
-    private HashMap<String, ArrayList<String>> amigos;
-    private HashMap<String, ArrayList<String>> solicitudesAmistad;
+    private ConcurrentHashMap<String, Interfaces> clientesEnLinea;
+    private ConcurrentHashMap<String, String> usuariosRegistrados;
+    private ConcurrentHashMap<String, ArrayList<String>> amigos;
+    private ConcurrentHashMap<String, ArrayList<String>> solicitudesAmistad;
     
     public ImplInterfaceServidor() throws RemoteException {
         super();
-        clientesEnLinea = new HashMap<>();
-        usuariosRegistrados = new HashMap<>();
-        amigos = new HashMap<>();
-        solicitudesAmistad = new HashMap<>();
+        clientesEnLinea = new ConcurrentHashMap<>();
+        amigos = new ConcurrentHashMap<>();
         usuariosRegistrados = cargarDatos();
         solicitudesAmistad = cargarSolicitudes();
     }
 
-    private HashMap<String, String> cargarDatos() {
-        HashMap<String, String> usuarios = new HashMap<>();
+    private ConcurrentHashMap<String, String> cargarDatos() {
+        ConcurrentHashMap<String, String> usuarios = new ConcurrentHashMap<>();
         amigos.clear();
 
         File bd = new File("LadoServidor/bd.txt");
@@ -171,8 +169,8 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         }
     }
 
-    private HashMap<String, ArrayList<String>> cargarSolicitudes() {
-        HashMap<String, ArrayList<String>> solicitudes = new HashMap<>();
+    private ConcurrentHashMap<String, ArrayList<String>> cargarSolicitudes() {
+        ConcurrentHashMap<String, ArrayList<String>> solicitudes = new ConcurrentHashMap<>();
 
         File solis = new File("LadoServidor/solis.txt");
         if (!solis.exists()) {
@@ -274,7 +272,13 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
             amigosUsuario.remove(usuario);
         }
 
-        // Considerar eliminar as solicitudes de amizade relacionadas
+        // Eliminar las solicitudes de amistad del usuario
+        // Eliminar solicitudes donde el usuario es solicitante
+        for (ArrayList<String> solicitudes : solicitudesAmistad.values()) {
+            solicitudes.remove(usuario);
+        }
+        // Eliminar solicitudes donde el usuario es solicitado
+        solicitudesAmistad.remove(usuario);
 
         return true;
     }
@@ -292,12 +296,17 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
             return false;
         }
 
+        // Comprobar que no hay una sesión ya iniciada
+        if(clientesEnLinea.get(nombreUsuario) != null){
+            return false;
+        }
+
         // Añadir al nuevo usuario a la lista de usuarios en línea
         
         Interfaces datosUsuario = new Interfaces(usuario, peer);
         clientesEnLinea.put(nombreUsuario, datosUsuario);
 
-        System.out.println("Se ha registrado un nuevo usuario en el servidor");
+        System.out.println("Un usuario a iniciado sesión en el servidor");
         
         for(String amigo : this.amigos.get(nombreUsuario)){
             Interfaces interfacesAmigo = clientesEnLinea.get(amigo);
@@ -323,6 +332,7 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
         // Eliminar al usuario de la lista de usuarios en línea
         Interfaces usuarioEliminado = clientesEnLinea.remove(usuario);
         if(usuarioEliminado == null){
+            System.out.println("Erro al desconectarse del servidor");
             return false;
         }
 
