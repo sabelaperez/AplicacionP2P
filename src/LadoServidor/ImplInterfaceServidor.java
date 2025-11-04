@@ -355,6 +355,11 @@ public class ImplInterfaceServidor extends UnicastRemoteObject implements Interf
             return false;
         }
 
+        // Comprobar que no te emites una solicitud a ti mismo
+        if(usuario.equals(nombreAmigo)){
+            return false;
+        }
+
         // Comprobar que el amigo deseado existe en la BD
         if(this.usuariosRegistrados.get(nombreAmigo) == null){
             return false;

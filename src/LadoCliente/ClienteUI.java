@@ -23,7 +23,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import javafx.stage.Modality;
-import javafx.stage.Window;
 
 public class ClienteUI extends Application {
     
