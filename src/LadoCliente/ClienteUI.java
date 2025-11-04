@@ -23,7 +23,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import javafx.stage.Modality;
-import javafx.stage.Window;
 
 public class ClienteUI extends Application {
     
@@ -838,7 +837,7 @@ public class ClienteUI extends Application {
                     if (success) {
                         showInfoAlert("Éxito", "Solicitude enviada a " + targetUsername);
                     } else {
-                        showInfoAlert("Error", "Non se puido enviar a solicitude. O usuario pode non existir ou xa tés unha solicitude pendente.");
+                        showInfoAlert("Error", "Non se puido enviar a solicitude. O usuario pode non existir, xa tés unha solicitude pendente ou xa sodes amigos.");
                     }
                 });
             } catch (RemoteException e) {
