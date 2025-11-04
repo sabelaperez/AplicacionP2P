@@ -82,7 +82,7 @@ task runClient(type: JavaExec) {
 jar {
     manifest {
         attributes(
-            'Main-Class': 'LadoCliente.ClienteApp'
+            'Main-Class': 'LadoCliente.ClienteUI'
         )
     }
 }
@@ -93,16 +93,26 @@ task clientJar(type: Jar) {
     description = 'Create a fat JAR for the client application'
     archiveBaseName = 'p2p-client'
     archiveClassifier = 'all'
+    
+    from sourceSets.main.output
+    
+    dependsOn configurations.runtimeClasspath
     from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
     }
-    with jar
+    
     manifest {
         attributes(
-            'Main-Class': 'LadoCliente.ClienteApp'
+            'Main-Class': 'LadoCliente.ClienteLauncher',  // Cambiar aquí
+            'Add-Modules': 'javafx.controls,javafx.fxml'
         )
     }
+    
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    
+    // Excluir archivos problemáticos de módulos
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
+    exclude 'module-info.class'
 }
 
 // Create fat JAR for server with all dependencies
@@ -124,9 +134,6 @@ task serverJar(type: Jar) {
 }
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
 }

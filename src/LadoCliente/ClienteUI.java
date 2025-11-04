@@ -50,7 +50,6 @@ public class ClienteUI extends Application {
     private static final String SUCCESS_COLOR = "#4CAF50";
     private static final String WARNING_COLOR = "#f57c00";
     private static final String TEXT_COLOR = "white";
-    private static final String SECONDARY_TEXT = "#bbbbbb";
     
     // Store chat history for each user
     private Map<String, ArrayList<ChatMessage>> chatHistories = new HashMap<>();
@@ -63,6 +62,10 @@ public class ClienteUI extends Application {
     
     // Store pending friend requests
     private Map<String, HBox> pendingRequestItems = new HashMap<>();
+
+    public static void main(String[] args) {
+        launch(args);
+    }
 
     @Override
     public void start(Stage primaryStage) {
@@ -1207,9 +1210,5 @@ public class ClienteUI extends Application {
         alert.setContentText(content);
         styleAlert(alert);
         alert.show();
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }

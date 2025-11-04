@@ -5,3 +5,6 @@ LadoCliente/*.class
 .gradle/
 build/
 !gradle/wrapper/gradle-wrapper.jar
+
+# IDEs
+.vscode/
